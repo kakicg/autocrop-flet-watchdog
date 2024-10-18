@@ -1,4 +1,30 @@
 import subprocess
+import time
+
+def get_camera_files():
+    """GPhoto2を使ってカメラ内のファイル一覧を取得する関数"""
+    result = subprocess.run(['gphoto2', '--list-files'], stdout=subprocess.PIPE, text=True)
+    files = []
+    for line in result.stdout.splitlines():
+        if line.startswith('#'):
+            parts = line.split()
+            if len(parts) > 1:
+                file_path = parts[1]
+                files.append(file_path)
+    return set(files)
+
+def monitor_camera(interval=0.5):
+    """カメラ内の新しい画像ファイルを監視する関数"""
+    previous_files = get_camera_files()
+    while True:
+        time.sleep(interval)
+        current_files = get_camera_files()
+        new_files = current_files - previous_files
+        if new_files:
+            print(f"新しい画像ファイルが見つかりました: {new_files}")
+            # 新しいファイルの処理をここで行う
+        previous_files = current_files
+
 
 def kill_gvfsd_gphoto2():
     try:
@@ -69,3 +95,4 @@ def check_camera_connection():
 
 if __name__ == "__main__":
     check_camera_connection()
+    monitor_camera()
