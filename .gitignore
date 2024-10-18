@@ -1,0 +1,10 @@
+cvenv/
+.venv/
+venv/
+images/
+processed_images/
+test_processed_images/
+croped_images/
+counter/
+test/
+test_images/
