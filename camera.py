@@ -3,6 +3,42 @@ import datetime
 import time
 import os
 
+def kill_gvfsd_gphoto2():
+    try:
+        # gvfsd-gphoto2 のプロセスを探す
+        result = subprocess.run(
+            ['pgrep', '-f', 'gvfsd-gphoto2'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        if result.stdout:
+            # プロセスIDを取得し、表示
+            pids = result.stdout.strip().split('\n')
+            # print(f"Found gvfsd-gphoto2 processes: {pids}")
+
+            # 取得した全プロセスをkill
+            for pid in pids:
+                subprocess.run(['kill', '-9', pid])
+                print(f"Killed process with PID: {pid}")
+        # else:
+        #     print("No gvfsd-gphoto2 process found.")
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def call_kill_gvfsd_before(kill_gvfsd_gphoto2):
+    def decorator(funcB):
+        def wrapper(*args, **kwargs):
+            # funcBの冒頭でfuncAを実行
+            kill_gvfsd_gphoto2()
+            # 続いてfuncBを実行
+            return funcB(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def get_camera_files_with_timestamps():
     """カメラ内のファイル名とタイムスタンプのペアを取得する関数"""
     result = subprocess.run(['gphoto2', '--list-files'], stdout=subprocess.PIPE, text=True)
@@ -20,6 +56,32 @@ def get_camera_files_with_timestamps():
 
     return files_with_timestamps
 
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
+def delete_all_files():
+    """gphoto2で全ファイルを再帰的に削除する関数"""
+    try:
+        # gphoto2コマンドの実行
+        result = subprocess.run(
+            ['gphoto2', '--delete-all-files', '--recurse'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        # コマンド実行結果の確認
+        if result.returncode == 0:
+            print("All files deleted successfully.")
+            print(result.stdout)  # 実行結果の標準出力を表示
+        else:
+            print("Failed to delete files.")
+            print(result.stderr)  # エラー内容を表示
+
+    except FileNotFoundError:
+        print("gphoto2 is not installed. Please install it.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def download_and_delete_file(file_number, file_name, download_folder):
     """ファイルをダウンロードし、カメラから削除"""
     save_path = os.path.join(download_folder, file_name)
@@ -27,10 +89,12 @@ def download_and_delete_file(file_number, file_name, download_folder):
     print(f"Downloaded: {file_name}")
 
     # カメラから削除
-    subprocess.run(['gphoto2', '--delete-file', str(file_number)])
-    print(f"Deleted from camera: {file_name}")
+    # subprocess.run(['gphoto2', '--delete-file', str(file_number)])
+    # print(f"Deleted from camera: {file_name}")
+    delete_all_files()
 
-def monitor_camera(download_folder, interval=5):
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
+def monitor_camera(download_folder, interval=0.5):
     """新しいファイルが見つかるまで監視し、見つかったら終了してファイルリストを返す"""
     os.makedirs(download_folder, exist_ok=True)  # 保存先フォルダを作成
 
@@ -44,40 +108,19 @@ def monitor_camera(download_folder, interval=5):
         new_files = current_files - previous_files
         if new_files:
             print("新しいファイルが見つかりました:")
+            result_list = []  # 新しいファイルをリストとして管理
+
             for file_number, file_name, timestamp in new_files:
                 print(f"File: {file_name}, Timestamp: {timestamp}")
                 download_and_delete_file(file_number, file_name, download_folder)
+                result_list.append((file_number, file_name, timestamp))
 
             # 見つかったファイルをリスト形式で返して終了
-            return list(new_files)
+            return result_list
 
         previous_files = current_files  # ファイル一覧を更新
 
-def kill_gvfsd_gphoto2():
-    try:
-        # gvfsd-gphoto2 のプロセスを探す
-        result = subprocess.run(
-            ['pgrep', '-f', 'gvfsd-gphoto2'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        
-        if result.stdout:
-            # プロセスIDを取得し、表示
-            pids = result.stdout.strip().split('\n')
-            print(f"Found gvfsd-gphoto2 processes: {pids}")
-
-            # 取得した全プロセスをkill
-            for pid in pids:
-                subprocess.run(['kill', '-9', pid])
-                print(f"Killed process with PID: {pid}")
-        else:
-            print("No gvfsd-gphoto2 process found.")
-    
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def capture_image():
     try:
         # GPhoto2を使用して画像をキャプチャしてダウンロード
@@ -97,6 +140,7 @@ def capture_image():
         print(f"カメラのエラー: {e}")
         return None
     
+@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def check_camera_connection():
     try:
         # gphoto2 --auto-detect コマンドの実行
@@ -122,11 +166,11 @@ def check_camera_connection():
 
 # 呼び出し元からの使い方例
 if __name__ == '__main__':
-    download_folder = "/path/to/download/folder"  # ダウンロード先を指定
+    download_folder = "./camera_images"  # ダウンロード先を指定
     new_files = monitor_camera(download_folder)
 
     # ダウンロードされたファイルを使って次の処理に進む
     print("次の処理を開始します...")
     for file_number, file_name, timestamp in new_files:
         print(f"Processing: {file_name} (Timestamp: {timestamp})")
-        # ここに加工や表示などの処理を追加
+        # ここに加工や表示などの処理を追加    
