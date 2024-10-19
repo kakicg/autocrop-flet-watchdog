@@ -1,30 +1,57 @@
 import subprocess
+import datetime
 import time
+import os
 
-def get_camera_files():
-    """GPhoto2を使ってカメラ内のファイル一覧を取得する関数"""
+def get_camera_files_with_timestamps():
+    """カメラ内のファイル名とタイムスタンプのペアを取得する関数"""
     result = subprocess.run(['gphoto2', '--list-files'], stdout=subprocess.PIPE, text=True)
-    files = []
-    for line in result.stdout.splitlines():
-        if line.startswith('#'):
-            parts = line.split()
-            if len(parts) > 1:
-                file_path = parts[1]
-                files.append(file_path)
-    return set(files)
+    files_with_timestamps = []
 
-def monitor_camera(interval=0.5):
-    """カメラ内の新しい画像ファイルを監視する関数"""
-    previous_files = get_camera_files()
+    for line in result.stdout.splitlines():
+        if line.startswith('#'):  # ファイル情報行を取得
+            parts = line.split()
+            if len(parts) >= 5:
+                file_name = parts[1]  # ファイル名
+                file_number = int(parts[0][1:])  # "#1"の形式から番号を取得
+                timestamp = int(parts[-1])  # Unixタイムスタンプ
+                dt_object = datetime.datetime.fromtimestamp(timestamp)  # 日時形式に変換
+                files_with_timestamps.append((file_number, file_name, dt_object))
+
+    return files_with_timestamps
+
+def download_and_delete_file(file_number, file_name, download_folder):
+    """ファイルをダウンロードし、カメラから削除"""
+    save_path = os.path.join(download_folder, file_name)
+    subprocess.run(['gphoto2', '--get-file', str(file_number), '--filename', save_path])
+    print(f"Downloaded: {file_name}")
+
+    # カメラから削除
+    subprocess.run(['gphoto2', '--delete-file', str(file_number)])
+    print(f"Deleted from camera: {file_name}")
+
+def monitor_camera(download_folder, interval=5):
+    """新しいファイルが見つかるまで監視し、見つかったら終了してファイルリストを返す"""
+    os.makedirs(download_folder, exist_ok=True)  # 保存先フォルダを作成
+
+    previous_files = set(get_camera_files_with_timestamps())  # 初回ファイル一覧
+
     while True:
         time.sleep(interval)
-        current_files = get_camera_files()
+        current_files = set(get_camera_files_with_timestamps())  # 最新のファイル一覧
+
+        # 新しいファイルの検出
         new_files = current_files - previous_files
         if new_files:
-            print(f"新しい画像ファイルが見つかりました: {new_files}")
-            # 新しいファイルの処理をここで行う
-        previous_files = current_files
+            print("新しいファイルが見つかりました:")
+            for file_number, file_name, timestamp in new_files:
+                print(f"File: {file_name}, Timestamp: {timestamp}")
+                download_and_delete_file(file_number, file_name, download_folder)
 
+            # 見つかったファイルをリスト形式で返して終了
+            return list(new_files)
+
+        previous_files = current_files  # ファイル一覧を更新
 
 def kill_gvfsd_gphoto2():
     try:
@@ -93,6 +120,13 @@ def check_camera_connection():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-if __name__ == "__main__":
-    check_camera_connection()
-    monitor_camera()
+# 呼び出し元からの使い方例
+if __name__ == '__main__':
+    download_folder = "/path/to/download/folder"  # ダウンロード先を指定
+    new_files = monitor_camera(download_folder)
+
+    # ダウンロードされたファイルを使って次の処理に進む
+    print("次の処理を開始します...")
+    for file_number, file_name, timestamp in new_files:
+        print(f"Processing: {file_name} (Timestamp: {timestamp})")
+        # ここに加工や表示などの処理を追加
