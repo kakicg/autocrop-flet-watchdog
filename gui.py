@@ -12,6 +12,7 @@ def start_gui(page: ft.Page):
 
     def next_item(event):
         page.session.set("gridview_loop", False)
+        page.session.set("camera_loop", False)
         # page
         
     barcode_textfield = ft.TextField(on_submit=set_item, border_color=ft.colors.BLACK)

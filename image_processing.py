@@ -1,26 +1,48 @@
 import cv2
-from PIL import Image
+import numpy as np
 
-def process_image(file_path, a, b):
+def process_image(file_path, save_path, a=1.0, b=0):
     # 画像を読み込む
-    img = cv2.imread(file_path)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY_INV)
-    
-    # 輪郭を検出
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    max_contour = max(contours, key=cv2.contourArea)
-    
-    # 最大矩形を取得
-    x, y, w, h = cv2.boundingRect(max_contour)
+    image = cv2.imread(file_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    # カーネルの定義
+    kernel = np.ones((5, 5), np.uint8)
+    # オープニング処理（ノイズ除去）
+    opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
+    # 物体を結合するためのダイレーション処理
+    dilated = cv2.dilate(opening, kernel, iterations=2)
+    # ダイレーション後の輪郭を検出
+    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # 輪郭に基づいてバウンディングボックスを描画
+    bounding_boxes = []
+    for contour in contours:
+        # 輪郭に外接する長方形（バウンディングボックス）を計算
+        x, y, w, h = cv2.boundingRect(contour)
+        bounding_boxes.append([x, y, x + w, y + h])
 
-    # 製品の高さを計算
-    height = (img.shape[0] - y) * a + b
+    # バウンディングボックス同士を結合する関数
+    def merge_boxes(boxes):
+        if len(boxes) == 0:
+            return []
 
-    # 画像をトリミング
-    cropped_img = img[y:y+h, x:x+w]
+        # バウンディングボックスの最小と最大の座標を初期化
+        x_min = min([box[0] for box in boxes])
+        y_min = min([box[1] for box in boxes])
+        x_max = max([box[2] for box in boxes])
+        y_max = max([box[3] for box in boxes])
 
-    # PIL形式に変換
-    cropped_img_pil = Image.fromarray(cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB))
+        return [[x_min, y_min, x_max, y_max]]
 
-    return cropped_img_pil, height
+    # すべてのバウンディングボックスを結合
+    merged_boxes = merge_boxes(bounding_boxes)
+    # 結合されたバウンディングボックスを描画（赤色の矩形）
+    for box in merged_boxes:
+        cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+
+    # 結果をファイルとして保存する
+    output_file_path = './output_bounding_box_merged.jpg'
+    cv2.imwrite(output_file_path, image)
+
+    print(f"画像が '{output_file_path}' として保存されました。")
+

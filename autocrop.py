@@ -1,6 +1,8 @@
 import flet as ft
 import time
 from gui import start_gui, add_image_and_update
+from camera import monitor_camera
+from image_processing import process_image
 import random
 
 def main(page: ft.Page):
@@ -24,7 +26,12 @@ def main(page: ft.Page):
         page.controls[1].visible = True
         angle = 1
         page.session.set("gridview_loop", True)
-        while True:
+        while page.session.get("gridview_loop"):
+            #カメラ画像の監視
+            page.session.set("camera_loop", True)
+            # images = monitor_camera(page)
+            process_image()
+            # トリミングが画像の表示
             add_image_and_update(
                 page, 
                 f"https://picsum.photos/200/300?{i}", 
@@ -34,7 +41,6 @@ def main(page: ft.Page):
             i += 1
             angle += 1
             time.sleep(1)
-            if not page.session.get("gridview_loop"):
-                break
+            
 
 ft.app(main, view=ft.AppView.WEB_BROWSER)
