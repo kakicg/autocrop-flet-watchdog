@@ -98,7 +98,7 @@ def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", inter
     while True:
         print(i)
         i+=1
-        if page and page.session.get("camera_loop"):
+        if page and not page.session.get("camera_loop"):
             break
         time.sleep(interval)
         new_files = get_camera_files_with_timestamps()
@@ -117,6 +117,7 @@ def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", inter
             if result_list:
                 return result_list[-1]
             return ""
+    return ""
 
 
 @call_kill_gvfsd_before(kill_gvfsd_gphoto2)

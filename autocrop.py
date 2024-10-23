@@ -29,7 +29,9 @@ def main(page: ft.Page):
         while page.session.get("gridview_loop"):
             #カメラ画像の監視
             page.session.set("camera_loop", True)
-            # images = monitor_camera(page)
+            new_file = monitor_camera(page)
+            if not new_file:
+                break
             process_image()
             # トリミングが画像の表示
             add_image_and_update(
