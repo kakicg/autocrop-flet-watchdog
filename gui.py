@@ -1,4 +1,6 @@
 import flet as ft
+global barcode_textfield_ref
+import os
 
 def start_gui(page: ft.Page):
     page.title = "商品撮影システム"
@@ -6,9 +8,10 @@ def start_gui(page: ft.Page):
     page.padding = 50
 
     def set_item(event):
+        page.session.set("barcode_number", event.control.value)
         event.control.value = ""
         page.session.set("barcode_loop", False)
-        # page.update()
+        page.update()
 
     def next_item(event):
         page.session.set("gridview_loop", False)
@@ -44,7 +47,8 @@ def add_image_and_update(page: ft.Page, image_path: str, item_num: str, height: 
     """FletのGUIを更新して画像と高さ情報を表示する"""
     # 画像コンポーネントの作成
     gridview = page.controls[-1]
-
+    image_absolute_path = os.path.abspath(image_path)
+    print(f"絶対パス：{image_absolute_path}")
     gridview.controls.insert(0,
         ft.Column(
             [
@@ -61,7 +65,7 @@ def add_image_and_update(page: ft.Page, image_path: str, item_num: str, height: 
                     weight=ft.FontWeight.W_100,
                 ),
                 ft.Image(
-                    src=image_path,
+                    src=f"{image_absolute_path}",
                     fit=ft.ImageFit.COVER,
                     repeat=ft.ImageRepeat.NO_REPEAT,
                 ),

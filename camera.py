@@ -94,15 +94,12 @@ def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", inter
     delete_all_files()  # ループに入る前にカメラ内の全ファイルを削除
     """新しいファイルが見つかるまで監視し、見つかったら終了してファイルリストを返す"""
     os.makedirs(download_folder, exist_ok=True)  # 保存先フォルダを作成
-    i=0
     while True:
-        print(i)
-        i+=1
         if page and not page.session.get("camera_loop"):
             break
         time.sleep(interval)
         new_files = get_camera_files_with_timestamps()
-        # 新しいファイルの検出
+        # カメラ内に新しい画像を検出
         if new_files:
             print("新しいファイルが見つかりました:")
             result_list = []  # 新しいファイルをリストとして管理
@@ -116,7 +113,7 @@ def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", inter
             delete_all_files()  # ダウンロード後にカメラ内のファイルを削除
             if result_list:
                 return result_list[-1]
-            return ""
+            return "" #例外
     return ""
 
 

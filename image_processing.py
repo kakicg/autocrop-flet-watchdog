@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
+import os
 
-def process_image(file_path, save_path, a=1.0, b=0):
+def process_image(camera_path, filename, processed_folder="./processed_images"):
     # 画像を読み込む
-    image = cv2.imread(file_path)
+    image = cv2.imread(camera_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
     # カーネルの定義
@@ -39,10 +40,15 @@ def process_image(file_path, save_path, a=1.0, b=0):
     # 結合されたバウンディングボックスを描画（赤色の矩形）
     for box in merged_boxes:
         cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+    
+    estimated_height = image.shape[0]
+    if len(merged_boxes)>0:
+        estimated_height = estimated_height - merged_boxes[0][1]
 
     # 結果をファイルとして保存する
-    output_file_path = './output_bounding_box_merged.jpg'
+    os.makedirs(processed_folder, exist_ok=True)  # 保存先フォルダを作成
+    output_file_path = os.path.join(processed_folder, filename)
     cv2.imwrite(output_file_path, image)
-
     print(f"画像が '{output_file_path}' として保存されました。")
+    return estimated_height, output_file_path
 

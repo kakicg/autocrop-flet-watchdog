@@ -4,45 +4,55 @@ from gui import start_gui, add_image_and_update
 from camera import monitor_camera
 from image_processing import process_image
 import random
+import os
+
+# グローバル
+camera_images_folder = "./camera_images"
+processed_images_foler = "./processed_images"
 
 def main(page: ft.Page):
     start_gui(page)
     i=1
     while True:
         page.session.set("barcode_loop", True)
-        page.controls[0].visible = True
-        page.controls[1].visible = False
+        page.controls[0].visible = True #top1_rpw
+        page.controls[1].visible = False #top2_rpw
         page.update()
         while True: 
             """バーコードを読み取り、商品情報を取得する"""
             # バーコードを読み取る
-            page.controls[0].controls[1].focus()
+            page.controls[0].controls[1].focus() #barcode_textfield
             time.sleep(1)
             if not page.session.get("barcode_loop"):
-                item_str = "".join([str(random.randint(0, 9)) for _ in range(6)])
+                barcode_number = page.session.get("barcode_number")
                 break
         
-        page.controls[0].visible = False
-        page.controls[1].visible = True
+        page.controls[0].visible = False #top1_rpw
+        page.controls[1].visible = True #top2_rpw
+        page.update()
         angle = 1
         page.session.set("gridview_loop", True)
         while page.session.get("gridview_loop"):
             #カメラ画像の監視
             page.session.set("camera_loop", True)
-            new_file = monitor_camera(page)
-            if not new_file:
+            camera_file = monitor_camera(page)
+            if not camera_file:
                 break
-            process_image()
+            filename = f"{barcode_number}_{angle}.jpg"
+            camera_path = os.path.join(camera_images_folder, camera_file)
+            estimated_height, output_file_path = process_image(camera_path, filename)
             # トリミングが画像の表示
+            print(f"output_file_path: {output_file_path}")
             add_image_and_update(
                 page, 
-                f"https://picsum.photos/200/300?{i}", 
-                item_str,
-                random.randint(100, 999)
+                output_file_path, 
+                barcode_number,
+                estimated_height
             )
             i += 1
             angle += 1
-            time.sleep(1)
+            time.sleep(.1)
             
 
-ft.app(main, view=ft.AppView.WEB_BROWSER)
+# ft.app(main, view=ft.AppView.WEB_BROWSER)
+ft.app(main)
