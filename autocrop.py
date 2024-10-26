@@ -3,12 +3,25 @@ import time
 from gui import start_gui, add_image_and_update
 from camera import monitor_camera
 from image_processing import process_image
-import random
+import threading
+import http.server
+import socketserver
 import os
+
+# HTTPサーバーの設定
+PORT = 8000
+
+Handler = http.server.SimpleHTTPRequestHandler
 
 # グローバル
 camera_images_folder = "./camera_images"
 processed_images_foler = "./processed_images"
+
+def start_http_server():
+    """HTTPサーバーを起動する関数"""
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        print(f"Serving at port {PORT}")
+        httpd.serve_forever()
 
 def main(page: ft.Page):
     start_gui(page)
@@ -53,6 +66,9 @@ def main(page: ft.Page):
             angle += 1
             time.sleep(.1)
             
-
-# ft.app(main, view=ft.AppView.WEB_BROWSER)
-ft.app(main)
+if __name__ == "__main__":
+    # HTTPサーバーをバックグラウンドスレッドで起動
+    # server_thread = threading.Thread(target=start_http_server, daemon=True)
+    # server_thread.start()
+    # ft.app(main, view=ft.AppView.WEB_BROWSER)
+    ft.app(main)

@@ -1,8 +1,13 @@
 import flet as ft
 global barcode_textfield_ref
 import os
+import socket
+
+PORT = 8000
+local_ip = "192.168.2.194"
 
 def start_gui(page: ft.Page):
+    page.window_maximized = True
     page.title = "商品撮影システム"
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = 50
@@ -45,10 +50,15 @@ def start_gui(page: ft.Page):
 
 def add_image_and_update(page: ft.Page, image_path: str, item_num: str, height: float):
     """FletのGUIを更新して画像と高さ情報を表示する"""
+    global PORT
+    # hostname = socket.gethostname()
+    # local_ip = socket.gethostbyname(hostname)
     # 画像コンポーネントの作成
     gridview = page.controls[-1]
     image_absolute_path = os.path.abspath(image_path)
     print(f"絶対パス：{image_absolute_path}")
+    
+
     gridview.controls.insert(0,
         ft.Column(
             [

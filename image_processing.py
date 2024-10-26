@@ -6,7 +6,7 @@ def process_image(camera_path, filename, processed_folder="./processed_images"):
     # 画像を読み込む
     image = cv2.imread(camera_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
     # カーネルの定義
     kernel = np.ones((5, 5), np.uint8)
     # オープニング処理（ノイズ除去）
