@@ -24,6 +24,13 @@ def start_http_server():
         httpd.serve_forever()
 
 def main(page: ft.Page):
+    page.window_maximized = True
+    page.title = "商品撮影システム"
+    page.theme_mode = ft.ThemeMode.DARK
+    page.padding = 50
+    page.fonts = {
+        "default": "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
+    }
     start_gui(page)
     i=1
     while True:

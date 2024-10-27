@@ -5,13 +5,9 @@ import socket
 
 PORT = 8000
 local_ip = "192.168.2.194"
+text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
 def start_gui(page: ft.Page):
-    page.window_maximized = True
-    page.title = "商品撮影システム"
-    page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 50
-
     def set_item(event):
         page.session.set("barcode_number", event.control.value)
         event.control.value = ""
@@ -25,15 +21,18 @@ def start_gui(page: ft.Page):
         
     barcode_textfield = ft.TextField(on_submit=set_item, border_color=ft.colors.BLACK)
     barcode_controls = [
-        ft.Text("バーコードをスキャンしてください", size=12, color=ft.colors.WHITE),
+        ft.Text("バーコードをスキャンしてください", style=text_style, size=12, color=ft.colors.WHITE),
         barcode_textfield
     ]
     top1_row = ft.Row(barcode_controls)
     page.add(top1_row)
 
     item_infos = [
-        ft.Text("商品情報", size=12, color=ft.colors.WHITE, weight=ft.FontWeight.W_600),
-        ft.CupertinoFilledButton(text="次へ", on_click=next_item, opacity_on_click=0.3,),
+        ft.Text("商品情報", style=text_style, size=12, color=ft.colors.WHITE, weight=ft.FontWeight.W_600),
+        ft.FilledTonalButton(
+            content=ft.Text("次へ", style=text_style),
+            on_click=next_item,
+        ),
     ]
     top2_row = ft.Row(item_infos)
     page.add(top2_row)
