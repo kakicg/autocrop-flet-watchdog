@@ -44,6 +44,23 @@ def process_image(camera_path, filename, processed_folder="./processed_images"):
     estimated_height = image.shape[0]
     if len(merged_boxes)>0:
         estimated_height = estimated_height - merged_boxes[0][1]
+    print(f"estimated_height:{estimated_height}")
+    outerbox_height = estimated_height
+    top_margin = 80
+    if image.shape[0] - estimated_height >= top_margin:
+        outerbox_height += top_margin
+    else:
+        outerbox_height = image.shape[0]
+    outerbox_width = outerbox_height * 9 // 16
+    left = (image.shape[1] - outerbox_width)//2
+    top = image.shape[0] - outerbox_height
+    top_left = (left, top)
+    print(f"top_left:{top_left}")
+
+    bottom_right = (left + outerbox_width , image.shape[0])
+    print(f"bottom_right:{bottom_right}")
+
+    cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
 
     # 結果をファイルとして保存する
     os.makedirs(processed_folder, exist_ok=True)  # 保存先フォルダを作成

@@ -34,7 +34,7 @@ def main(page: ft.Page):
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.icons.PALETTE),
         leading_width=40,
-        title=ft.Text("商品撮影システム"),
+        title=ft.Text("商品撮影システム", style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
         bgcolor=ft.colors.SURFACE_VARIANT,
         actions=[
@@ -88,7 +88,7 @@ def main(page: ft.Page):
                 barcode_number,
                 estimated_height
             )
-            i += 1
+            
             angle += 1
             time.sleep(.1)
             
