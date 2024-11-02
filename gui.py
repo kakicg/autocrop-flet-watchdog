@@ -57,6 +57,8 @@ def add_image_and_update(page: ft.Page, image_path: str, item_num: str, height: 
     image_absolute_path = os.path.abspath(image_path)
     print(f"絶対パス：{image_absolute_path}")
     
+    imgpath = f"http://192.168.2.194:8000{image_path[1:]}"
+    print(imgpath)
 
     gridview.controls.insert(0,
         ft.Column(
@@ -69,12 +71,14 @@ def add_image_and_update(page: ft.Page, image_path: str, item_num: str, height: 
                 ),
                 ft.Text(
                     f"推定高さ:{height}",
+                    style=text_style,
                     size=12,
                     color=ft.colors.WHITE,
                     weight=ft.FontWeight.W_100,
                 ),
                 ft.Image(
                     src=f"{image_absolute_path}",
+                    # src=f"{imgpath}",
                     fit=ft.ImageFit.COVER,
                     repeat=ft.ImageRepeat.NO_REPEAT,
                 ),

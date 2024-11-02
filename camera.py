@@ -40,22 +40,32 @@ def call_kill_gvfsd_before(kill_gvfsd_gphoto2):
     return decorator
 
 @call_kill_gvfsd_before(kill_gvfsd_gphoto2)
-def get_camera_files_with_timestamps():
+def get_camera_files_with_timestamps(page:ft.Page = None):
     """カメラ内のファイル名とタイムスタンプのペアを取得する関数"""
-    result = subprocess.run(['gphoto2', '--list-files'], stdout=subprocess.PIPE, text=True)
-    files_with_timestamps = []
+    try:
+        result = subprocess.run(['gphoto2', '--list-files'], stdout=subprocess.PIPE, text=True)
+        files_with_timestamps = []
 
-    for line in result.stdout.splitlines():
-        if line.startswith('#'):  # ファイル情報行を取得
-            parts = line.split()
-            if len(parts) >= 5:
-                file_name = parts[1]  # ファイル名
-                file_number = int(parts[0][1:])  # "#1"の形式から番号を取得
-                timestamp = int(parts[-1])  # Unixタイムスタンプ
-                dt_object = datetime.datetime.fromtimestamp(timestamp)  # 日時形式に変換
-                files_with_timestamps.append((file_number, file_name, dt_object))
+        for line in result.stdout.splitlines():
+            if line.startswith('#'):  # ファイル情報行を取得
+                parts = line.split()
+                if len(parts) >= 5:
+                    file_name = parts[1]  # ファイル名
+                    file_number = int(parts[0][1:])  # "#1"の形式から番号を取得
+                    timestamp = int(parts[-1])  # Unixタイムスタンプ
+                    dt_object = datetime.datetime.fromtimestamp(timestamp)  # 日時形式に変換
+                    files_with_timestamps.append((file_number, file_name, dt_object))
 
-    return files_with_timestamps
+        return files_with_timestamps
+    except subprocess.CalledProcessError as e:
+        print(f"コマンドがエラー終了しました (コード: {e.returncode})")
+        print(f"{e.stderr.strip()}")
+        if page:
+            page.session.set("camera_loop", False)
+    except FileNotFoundError:
+        print("gphoto2が見つかりません。インストールされていることを確認してください。")
+        if page:
+            page.session.set("camera_loop", False)
 
 @call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def delete_all_files():
@@ -89,7 +99,6 @@ def download_file(file_number, file_name, download_folder):
     subprocess.run(['gphoto2', '--get-file', str(file_number), '--filename', save_path])
     print(f"Downloaded: {file_name}")
 
-@call_kill_gvfsd_before(kill_gvfsd_gphoto2)
 def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", interval=0.5):
     delete_all_files()  # ループに入る前にカメラ内の全ファイルを削除
     """新しいファイルが見つかるまで監視し、見つかったら終了してファイルリストを返す"""
@@ -98,7 +107,7 @@ def monitor_camera(page:ft.Page = None ,download_folder="./camera_images", inter
         if page and not page.session.get("camera_loop"):
             break
         time.sleep(interval)
-        new_files = get_camera_files_with_timestamps()
+        new_files = get_camera_files_with_timestamps(page)
         # カメラ内に新しい画像を検出
         if new_files:
             print("新しいファイルが見つかりました:")
@@ -138,7 +147,7 @@ def capture_image():
         return None
     
 @call_kill_gvfsd_before(kill_gvfsd_gphoto2)
-def check_camera_connection():
+def check_camera_connection() -> str:
     try:
         # gphoto2 --auto-detect コマンドの実行
         result = subprocess.run(
@@ -151,15 +160,16 @@ def check_camera_connection():
         # 出力結果の処理
         output = result.stdout.strip()
         if "No camera found" in output:
-            print("No camera detected.")
+            return None
         else:
-            print("Camera detected:")
-            print(output)
+            return output
     
     except FileNotFoundError:
         print("gphoto2 is not installed. Please install it using Homebrew: 'brew install gphoto2'.")
+        return None
     except Exception as e:
         print(f"An error occurred: {e}")
+        return None
 
 # 呼び出し元からの使い方例
 if __name__ == '__main__':

@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import os
 
-def process_image(camera_path, filename, processed_folder="./processed_images"):
+def process_image(original_image_path, filename, processed_folder="./processed_images"):
     # 画像を読み込む
-    image = cv2.imread(camera_path)
+    image = cv2.imread(original_image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
     # カーネルの定義
@@ -12,7 +12,7 @@ def process_image(camera_path, filename, processed_folder="./processed_images"):
     # オープニング処理（ノイズ除去）
     opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
     # 物体を結合するためのダイレーション処理
-    dilated = cv2.dilate(opening, kernel, iterations=2)
+    dilated = cv2.dilate(opening, kernel, iterations=4)
     # ダイレーション後の輪郭を検出
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # 輪郭に基づいてバウンディングボックスを描画
