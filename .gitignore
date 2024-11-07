@@ -1,12 +1,8 @@
-cvenv/
+*env/
 .venv/
 venv/
 images/
-processed_images/
-test_processed_images/
-croped_images/
-counter/
-test/
-sub/
-test_images/
 *_images/
+counter/
+_test/
+_sub/

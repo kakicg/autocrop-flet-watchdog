@@ -4,9 +4,9 @@ class MainView(ft.Container):
     def __init__(self, page:ft.Page):
         super().__init__()
         # カンマを除去し、プロパティを正しく設定
-        view_column = ft.Column(
+        view_column = ft.ListView(
             expand = True,
-            height = float('inf')
+            # auto_scroll = True
         )
         self.content = view_column
         self.expand = True

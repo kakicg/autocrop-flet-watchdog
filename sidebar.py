@@ -13,10 +13,23 @@ class SideBar(ft.Container):
             barcode_textfield.visible = False
             next_button.visible = True
             top_message_container.border = ft.border.all(6, ft.colors.BLUE_100)
-            top_message_container.content.value = f'[ {page.session.get("barcode_number")} ]を撮影中...'
-            
+            current_barcode_number = page.session.get("barcode_number")
+            top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'
+            middle_lists.append(ft.ListTile(
+                title=ft.Text(f"[ {current_barcode_number} ]"),
+                on_click=tile_clicked
+            ))
+            horizontal_list_view = ft.ListView(
+                horizontal=True,
+                height=320,
+                # auto_scroll=True,
+            )
+            view_controls.insert(0, horizontal_list_view)
             page.update()
-            monitor_and_process(page, gridview.controls)
+            monitor_and_process(
+                page, 
+                view_controls[-1].controls
+            )
 
         def next_item(event):
             page.session.set("camera_loop", False)
@@ -28,6 +41,9 @@ class SideBar(ft.Container):
         
         def force_focus(evet):
             barcode_textfield.focus()
+
+        def tile_clicked(event):
+            print(f"{event.control.title.value} clicked!")
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
@@ -42,15 +58,23 @@ class SideBar(ft.Container):
             width=float('inf'),
             border = ft.border.all(6, ft.colors.PINK_100)
         )
-
+        middle_lists = []
+        for i in range(20):
+            middle_lists.append(ft.ListTile(
+                title=ft.Text(f"{i}番目 list tile"),
+                on_click=tile_clicked
+            ))
+        
         # 中央の伸縮コンポーネント (B)
-        middle_container = ft.Container(
-            content=ft.Text("B: 中央で伸縮", color=ft.colors.WHITE),
+        middle_container = ft.ListView(
+            controls=middle_lists,
+            divider_thickness = 1,
             expand=True,  # ここで上下に伸縮させる
             padding=10,
-            width=float('inf')
+            width=float('inf'),
+            auto_scroll=True,
         )
-
+        middle_lists = middle_container.controls
         # 下部の固定コンポーネント (C)
         barcode_textfield = ft.TextField(
             on_submit=set_item,
@@ -78,16 +102,6 @@ class SideBar(ft.Container):
             padding=0,
             width=float('inf')
         )
-        gridview = ft.GridView(
-                expand=1,
-                runs_count=5,
-                max_extent=200,
-                child_aspect_ratio=0.5625,
-                spacing=30,
-                run_spacing=10,
-        ) 
-        view_controls.insert(0, gridview)
-
         # Columnを使ってA, B, Cを縦に配置
         self.content = ft.Column(
             controls=[top_message_container, middle_container, foot_container],
@@ -104,4 +118,5 @@ class SideBar(ft.Container):
         self.top_message_text = top_message_text
         self.foot_container = foot_container
         self.barcode_textfield = barcode_textfield
+        self.middle_lists = middle_lists
 

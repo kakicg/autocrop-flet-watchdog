@@ -63,6 +63,7 @@ def monitor_and_process(
                             src=f"{processed_path}",
                             fit=ft.ImageFit.COVER,
                             repeat=ft.ImageRepeat.NO_REPEAT,
+                            height=240
                         ),
                     ]
                 ),
