@@ -1,23 +1,21 @@
 import flet as ft
 from sidebar import SideBar
 from mainview import MainView
+import optparse
 import os
-import sys
-
 
 def main(page: ft.Page):
     def terminate(event):
         page.session.set("camera_loop", False)
         page.window.close()
-        # sys.exit()
 
     page.title = "Auto Crop App"
     page.theme_mode = ft.ThemeMode.DARK
     page.window.maximized = True
     page.appbar = ft.AppBar(
-        # leading=ft.Icon(ft.icons.PALETTE),
-        # leading_width=40,
-        title=ft.Text("商品撮影システム", style=ft.TextStyle(font_family="Noto Sans CJK JP")),
+        leading=ft.Icon(ft.icons.PHOTO_CAMERA_OUTLINED),
+        leading_width=40,
+        title=ft.Text("商品撮影システム", size=16, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
         bgcolor=ft.colors.SURFACE_VARIANT,
         actions=[

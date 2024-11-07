@@ -7,5 +7,6 @@ test_processed_images/
 croped_images/
 counter/
 test/
+sub/
 test_images/
 *_images/

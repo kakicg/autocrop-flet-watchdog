@@ -1,6 +1,5 @@
 import flet as ft
 from monitor_process import monitor_and_process
-from jtext import JText
 import time
 
 class SideBar(ft.Container):
@@ -18,22 +17,6 @@ class SideBar(ft.Container):
             
             page.update()
             monitor_and_process(page, gridview.controls)
-            # while page.session.get("camera_loop"):
-            #     current_angle = page.session.get("current_angle")
-            #     current_angle += 1
-            #     print(f"{current_angle} アングル")
-            #     gridview.controls.insert(
-            #         0,
-            #         ft.Image(
-            #             src=f"https://picsum.photos/200/300?{current_angle}",
-            #             fit=ft.ImageFit.NONE,
-            #             repeat=ft.ImageRepeat.NO_REPEAT,
-            #             border_radius=ft.border_radius.all(10),
-            #         )
-            #     )
-            #     page.session.set("current_angle", current_angle)
-            #     page.update()
-            #     time.sleep(3)
 
         def next_item(event):
             page.session.set("camera_loop", False)
