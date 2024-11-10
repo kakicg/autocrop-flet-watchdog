@@ -46,6 +46,12 @@ def monitor_and_process(
                 0,
                 ft.Column(
                     [
+                        ft.Image(
+                            src=f"{processed_path}",
+                            fit=ft.ImageFit.COVER,
+                            repeat=ft.ImageRepeat.NO_REPEAT,
+                            height=240
+                        ),
                         ft.Text(
                             f"[ {new_name} ]",
                             size=12,
@@ -58,12 +64,6 @@ def monitor_and_process(
                             size=12,
                             color=ft.colors.WHITE,
                             weight=ft.FontWeight.W_100,
-                        ),
-                        ft.Image(
-                            src=f"{processed_path}",
-                            fit=ft.ImageFit.COVER,
-                            repeat=ft.ImageRepeat.NO_REPEAT,
-                            height=240
                         ),
                     ]
                 ),

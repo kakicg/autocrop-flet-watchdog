@@ -15,7 +15,7 @@ def main(page: ft.Page):
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.icons.PHOTO_CAMERA_OUTLINED),
         leading_width=40,
-        title=ft.Text("商品撮影システム", size=16, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
+        title=ft.Text("商品撮影システム", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
         bgcolor=ft.colors.SURFACE_VARIANT,
         actions=[
@@ -31,7 +31,7 @@ def main(page: ft.Page):
         ],
     )
     main_view = MainView(page)
-    side_bar = SideBar(page, main_view.view_controls)
+    side_bar = SideBar(page, main_view.view_controls, main_view.content)
 
     layout = ft.Row(
         [side_bar, main_view],
