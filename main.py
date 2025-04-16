@@ -1,12 +1,16 @@
 import flet as ft
 from sidebar import SideBar
 from mainview import MainView
+from watchdog_process import start_watchdog
 import optparse
 import os
 
 def main(page: ft.Page):
     def terminate(event):
         page.session.set("camera_loop", False)
+        if hasattr(page, 'observer'):
+            page.observer.stop()
+            page.observer.join()
         page.window.close()
 
     page.title = "Auto Crop App"
@@ -42,6 +46,10 @@ def main(page: ft.Page):
 
     # レイアウトをページに追加
     page.add(layout)
+    
+    # Watchdogを起動
+    page.observer = start_watchdog(page, main_view.view_controls)
+    
     page.update()
 
 # Fletアプリケーションを実行

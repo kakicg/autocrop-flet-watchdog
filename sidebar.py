@@ -1,13 +1,10 @@
 import flet as ft
-from monitor_process import monitor_and_process
 import time
 import random
 import colorsys
 
 
 class SideBar(ft.Container):
-    
-    
     def __init__(self, page:ft.Page, view_controls, main_view):
         super().__init__()
         def set_item(event):
@@ -31,9 +28,8 @@ class SideBar(ft.Container):
                 hex_color = f"#{r:02x}{g:02x}{b:02x}"
 
                 return hex_color
-            page.session.set("camera_loop", True)
+            
             page.session.set("barcode_number", event.control.value)
-            page.session.set("current_angle", 0)
             event.control.value = ""
             barcode_textfield.visible = False
             next_button.visible = True
@@ -68,18 +64,13 @@ class SideBar(ft.Container):
             horizontal_list_view = ft.ListView(
                 horizontal=True,
                 height=horizontal_list_view_height,
-                # auto_scroll=True,
             )
             view_controls.insert(1, horizontal_list_view)
             main_view.scroll_to(offset=0, duration=1000)
             page.update()
-            monitor_and_process(
-                page, 
-                view_controls[-1].controls
-            )
 
         def next_item(event):
-            page.session.set("camera_loop", False)
+            page.session.set("barcode_number", "")
             barcode_textfield.visible = True
             next_button.visible = False
             top_message_container.border = ft.border.all(6, ft.colors.PINK_100)
@@ -91,10 +82,8 @@ class SideBar(ft.Container):
 
         def tile_clicked(event):
             index = middle_lists.index(event.control)
-            # main_view.scroll_to(key=event.control.title.value, duration=1000)
             offset_pos = (horizontal_list_view_height + item_title_height) * index
             main_view.scroll_to(offset=offset_pos, duration=1000)
-            # print(f"offset_pos: {offset_pos}")
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
@@ -112,10 +101,9 @@ class SideBar(ft.Container):
         # 中央の伸縮コンポーネント (B)
         middle_container = ft.ListView(
             divider_thickness = 1,
-            expand=True,  # ここで上下に伸縮させる
+            expand=True,
             padding=7,
             width=float('inf'),
-            # auto_scroll=True,
         )
         middle_lists = middle_container.controls
         # 下部の固定コンポーネント (C)
@@ -137,8 +125,8 @@ class SideBar(ft.Container):
         )
         foot_column = ft.Column(
             controls=[barcode_textfield, next_button],
-            spacing=10,  # コンポーネント間の余白
-            width=float('inf')  # サイドバー全体をページにフィットさせる
+            spacing=10,
+            width=float('inf')
         )
         foot_container = ft.Container(
             content=foot_column,
@@ -148,16 +136,16 @@ class SideBar(ft.Container):
         # Columnを使ってA, B, Cを縦に配置
         self.content = ft.Column(
             controls=[top_message_container, middle_container, foot_container],
-            spacing=10,  # コンポーネント間の余白
-            expand=True  # サイドバー全体をページにフィットさせる
+            spacing=10,
+            expand=True
         )
 
         # サイドバーのスタイル
-        self.width = 300  # サイドバーの幅
-        self.height = float('inf')  # 縦に最大限伸ばす
+        self.width = 300
+        self.height = float('inf')
         self.bgcolor = ft.colors.BLUE_GREY_800
-        self.padding = ft.padding.all(10)  # サイドバーの内側余白
-        self.margin = ft.margin.all(0)  # サイドバーの外側余白
+        self.padding = ft.padding.all(10)
+        self.margin = ft.margin.all(0)
         self.top_message_text = top_message_text
         self.foot_container = foot_container
         self.barcode_textfield = barcode_textfield
