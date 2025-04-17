@@ -31,8 +31,16 @@ class SideBar(ft.Container):
             
             page.session.set("barcode_number", event.control.value)
             event.control.value = ""
-            barcode_textfield.visible = False
-            next_button.visible = True
+            
+            # モードに応じてUIを更新
+            current_mode = page.session.get("mode")
+            if current_mode == "multi_angle":
+                barcode_textfield.visible = False
+                next_button.visible = True
+            else:
+                barcode_textfield.visible = True
+                next_button.visible = False
+            
             top_message_container.border = ft.border.all(6, ft.colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")
             top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'

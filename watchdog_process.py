@@ -27,6 +27,7 @@ class ImageHandler(FileSystemEventHandler):
         
         self.processed_files.add(image_path)
         barcode_number = self.page.session.get('barcode_number')
+        current_mode = self.page.session.get('mode')
         
         # バーコードが変更された場合、アングル番号をリセット
         if barcode_number != self.last_barcode:
@@ -85,17 +86,34 @@ class ImageHandler(FileSystemEventHandler):
             margin=5,
         )
 
-        # メインビューのコントロールに追加
-        if len(self.view_controls) > 1:
-            self.view_controls[1].controls.insert(0, image_container)
-        else:
-            self.view_controls.insert(1, ft.ListView(
-                controls=[image_container],
-                horizontal=True,
-                height=320,
-            ))
+        try:
+            # メインビューのコントロールに追加
+            if len(self.view_controls) > 1:
+                self.view_controls[1].controls.insert(0, image_container)
+            else:
+                self.view_controls.insert(1, ft.ListView(
+                    controls=[image_container],
+                    horizontal=True,
+                    height=320,
+                ))
 
-        self.page.update()
+            # single_angleモードの場合、画像処理完了後にバーコード情報をクリア
+            if current_mode == 'single_angle' and barcode_number:
+                self.page.session.set('barcode_number', '')
+                self.last_barcode = None
+                self.current_angle = 0
+                
+                # メッセージを更新
+                if len(self.view_controls) > 0:
+                    top_container = self.view_controls[0]
+                    if isinstance(top_container, ft.Container):
+                        top_container.border = ft.border.all(6, ft.colors.PINK_100)
+                        if isinstance(top_container.content, ft.Text):
+                            top_container.content.value = 'バーコードを読み取ってください'
+
+            self.page.update()
+        except Exception as e:
+            print(f"Error updating UI: {e}")
 
 def start_watchdog(page: ft.Page, view_controls, watch_folder="./watch_folder"):
     os.makedirs(watch_folder, exist_ok=True)
