@@ -19,7 +19,7 @@ def main(page: ft.Page):
         else:
             new_mode = "single_angle"
         page.session.set("mode", new_mode)
-        mode_text.value = f"モード: {'複数角度' if new_mode == 'multi_angle' else '単一角度'}"
+        mode_text.value = f"モード: {'複数アングル' if new_mode == 'multi_angle' else '単一アングル'}"
         page.update()
 
     page.title = "Auto Crop App"

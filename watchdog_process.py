@@ -5,6 +5,7 @@ import os
 from image_processing import process_image
 from item_db import ItemInfo, session
 import time
+from datetime import datetime
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
@@ -36,7 +37,7 @@ class ImageHandler(FileSystemEventHandler):
         
         if barcode_number:
             self.current_angle += 1
-            new_name = f"{barcode_number}_{self.current_angle}.jpg"
+            new_name = f"{barcode_number}.jpg"
         else:
             new_name = os.path.basename(image_path)
 
@@ -54,6 +55,9 @@ class ImageHandler(FileSystemEventHandler):
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
         
+        # 現在のタイムスタンプを取得
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         # 新しい画像コンテナを作成
         image_container = ft.Container(
             content=ft.Column(
@@ -65,7 +69,7 @@ class ImageHandler(FileSystemEventHandler):
                         height=150
                     ),
                     ft.Text(
-                        f"[ {new_name} ]",
+                        f"{new_name}",
                         size=12,
                         color=ft.colors.WHITE,
                         weight=ft.FontWeight.W_600,
@@ -74,6 +78,13 @@ class ImageHandler(FileSystemEventHandler):
                         f"推定高さ:{estimated_height}",
                         style=text_style,
                         size=12,
+                        color=ft.colors.WHITE,
+                        weight=ft.FontWeight.W_100,
+                    ),
+                    ft.Text(
+                        f"[ {current_time} ]",
+                        style=text_style,
+                        size=10,
                         color=ft.colors.WHITE,
                         weight=ft.FontWeight.W_100,
                     ),
