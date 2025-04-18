@@ -1,6 +1,5 @@
 import flet as ft
 from sidebar import SideBar
-from mainview import MainView
 from watchdog_process import start_watchdog
 import optparse
 import os
@@ -48,8 +47,15 @@ def main(page: ft.Page):
             ),
         ],
     )
-    main_view = MainView(page)
-    side_bar = SideBar(page, main_view.view_controls, main_view.content)
+    main_view = ft.GridView(
+        expand=1,
+        runs_count=5,
+        max_extent=150,
+        child_aspect_ratio=0.45,
+        spacing=5,
+        run_spacing=5,
+    )
+    side_bar = SideBar(page, main_view.controls, main_view)
 
     layout = ft.Row(
         [side_bar, main_view],
@@ -62,7 +68,7 @@ def main(page: ft.Page):
     page.add(layout)
     
     # Watchdogを起動
-    page.observer = start_watchdog(page, main_view.view_controls)
+    page.observer = start_watchdog(page, main_view.controls)
     
     page.update()
 

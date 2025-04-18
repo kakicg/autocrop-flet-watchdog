@@ -57,23 +57,22 @@ class SideBar(ft.Container):
                     padding=8
                 ),
             )
-            view_controls.insert(0, ft.Container(
-                        bgcolor=new_color,
-                        height=item_title_height,
-                        padding=ft.padding.only(left=40, top=10),
-                        content=ft.Text(
-                            f"{current_barcode_number}", 
-                            color='#000000', 
-                            size=20,
-                            weight=ft.FontWeight.W_600,
-                        ),
-                        key=current_barcode_number,
-                    ))
+            # view_controls.insert(0, ft.Container(
+            #             bgcolor=new_color,
+            #             height=item_title_height,
+            #             padding=ft.padding.only(left=40, top=10),
+            #             content=ft.Text(
+            #                 f"{current_barcode_number}", 
+            #                 color='#000000', 
+            #                 size=20,
+            #                 weight=ft.FontWeight.W_600,
+            #             ),
+            #             key=current_barcode_number,
+            #         ))
             horizontal_list_view = ft.ListView(
                 horizontal=True,
                 height=horizontal_list_view_height,
             )
-            view_controls.insert(1, horizontal_list_view)
             main_view.scroll_to(offset=0, duration=1000)
             page.update()
 

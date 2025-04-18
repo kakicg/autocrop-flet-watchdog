@@ -60,9 +60,9 @@ class ImageHandler(FileSystemEventHandler):
                 [
                     ft.Image(
                         src=abs_processed_path,
-                        fit=ft.ImageFit.COVER,
+                        fit=ft.ImageFit.CONTAIN,
                         repeat=ft.ImageRepeat.NO_REPEAT,
-                        height=240
+                        height=150
                     ),
                     ft.Text(
                         f"[ {new_name} ]",
