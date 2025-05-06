@@ -6,3 +6,4 @@ images/
 counter/
 _test/
 _sub/
+.DS_Store
