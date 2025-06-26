@@ -31,11 +31,11 @@ def main(page: ft.Page):
     mode_text = ft.Text("モード: 単一角度", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
-        leading=ft.Icon(ft.icons.PHOTO_CAMERA_OUTLINED),
+        leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
         leading_width=40,
         title=ft.Text("商品撮影システム", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
-        bgcolor=ft.colors.SURFACE_VARIANT,
+        bgcolor=ft.Colors.ON_SURFACE_VARIANT,
         actions=[
             mode_text,
             ft.PopupMenuButton(

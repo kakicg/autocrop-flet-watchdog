@@ -41,7 +41,7 @@ class SideBar(ft.Container):
                 barcode_textfield.visible = True
                 next_button.visible = False
             
-            top_message_container.border = ft.border.all(6, ft.colors.BLUE_100)
+            top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")
             top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'
             new_color = random_color_hex()
@@ -68,7 +68,7 @@ class SideBar(ft.Container):
             page.session.set("barcode_number", "")
             barcode_textfield.visible = True
             next_button.visible = False
-            top_message_container.border = ft.border.all(6, ft.colors.PINK_100)
+            top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
             top_message_container.content.value = 'バーコードを読み取ってください'
             page.update()
         
@@ -84,14 +84,14 @@ class SideBar(ft.Container):
         top_message_text = ft.Text(
             "バーコードを読み取ってください", 
             style = ft.TextStyle(font_family="Noto Sans CJK JP"),
-            color = ft.colors.WHITE,
+            color = ft.Colors.WHITE,
             size=14,
         )
         top_message_container = ft.Container(
             content=top_message_text,
             padding=10,
             width=float('inf'),
-            border = ft.border.all(6, ft.colors.PINK_100)
+            border = ft.border.all(6, ft.Colors.PINK_100)
         )
         # 中央の伸縮コンポーネント (B)
         middle_container = ft.ListView(
@@ -105,8 +105,8 @@ class SideBar(ft.Container):
         barcode_textfield = ft.TextField(
             on_submit=set_item,
             on_blur=force_focus,
-            border_color=ft.colors.BLUE_GREY_700,
-            cursor_color=ft.colors.BLUE_GREY_700,
+            border_color=ft.Colors.BLUE_GREY_700,
+            cursor_color=ft.Colors.BLUE_GREY_700,
             text_size=8,
             autofocus=True,
             visible=True
@@ -138,7 +138,7 @@ class SideBar(ft.Container):
         # サイドバーのスタイル
         self.width = 300
         self.height = float('inf')
-        self.bgcolor = ft.colors.BLUE_GREY_800
+        self.bgcolor = ft.Colors.BLUE_GREY_800
         self.padding = ft.padding.all(10)
         self.margin = ft.margin.all(0)
         self.top_message_text = top_message_text
