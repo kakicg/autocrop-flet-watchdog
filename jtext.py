@@ -4,7 +4,7 @@ class JText(ft.Text):
     def __init__(
             self,
             style=None,
-            color=ft.colors.WHITE,
+            color=ft.Colors.WHITE,
             **kwargs
         ):
         # デフォルトのスタイルを設定（もしstyleが指定されていない場合）

@@ -7,7 +7,7 @@ class MainView(ft.Container):
         self.expand = 1  # 親として全体に広がる
         self.spacing = 0
         self.scroll = ft.ScrollMode.AUTO
-        self.bgcolor = ft.colors.BLACK
+        self.bgcolor = ft.Colors.BLACK
         self.padding = ft.padding.only(left=20, top=10)
         self.margin = ft.margin.symmetric(horizontal=5)
 

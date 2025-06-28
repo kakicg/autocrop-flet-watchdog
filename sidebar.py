@@ -2,32 +2,13 @@ import flet as ft
 import time
 import random
 import colorsys
+from sqlalchemy.orm import declarative_base
 
 
 class SideBar(ft.Container):
     def __init__(self, page:ft.Page, view_controls, main_view):
         super().__init__()
         def set_item(event):
-            def random_color_hex(
-                    hue_range=(0.0,1.0), 
-                    saturation_range=(0.15,0.2), 
-                    value_range=(0.95,1.0)
-                ):
-                # Hue (色相), Saturation (彩度), Value (明度) をランダムに生成
-                h = random.uniform(*hue_range)          # 色相：0.0～1.0
-                s = random.uniform(*saturation_range)  # 彩度：例 0.5～1.0
-                v = random.uniform(*value_range)       # 明度：例 0.8～1.0
-
-                # HSVからRGBに変換 (結果は0～1)
-                r, g, b = colorsys.hsv_to_rgb(h, s, v)
-
-                # RGB値を0～255に変換
-                r, g, b = int(r * 255), int(g * 255), int(b * 255)
-
-                # 16進数 (6桁) にフォーマット
-                hex_color = f"#{r:02x}{g:02x}{b:02x}"
-
-                return hex_color
             
             page.session.set("barcode_number", event.control.value)
             event.control.value = ""
@@ -44,13 +25,12 @@ class SideBar(ft.Container):
             top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")
             top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'
-            new_color = random_color_hex()
             middle_lists.insert(0, 
                 ft.Container(
                     content=ft.Text(current_barcode_number, 
                                 color="black",
                             ),
-                    bgcolor=new_color,
+                    bgcolor="#ffffe0",
                     expand=True,
                     on_click=tile_clicked,
                     margin=8,

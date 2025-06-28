@@ -38,6 +38,15 @@ class ImageHandler(FileSystemEventHandler):
         if barcode_number:
             self.current_angle += 1
             new_name = f"{barcode_number}.jpg"
+            # --- SideBarのmiddle_listsを更新 ---
+            if hasattr(self.page, 'side_bar'):
+                for container in self.page.side_bar.middle_lists:
+                    if isinstance(container, ft.Container) and hasattr(container, 'content'):
+                        content = container.content
+                        if isinstance(content, ft.Text) and content.value == barcode_number:
+                            container.bgcolor = "#028F68"
+                            content.color = "white"
+                            break
         else:
             new_name = os.path.basename(image_path)
 
@@ -71,28 +80,28 @@ class ImageHandler(FileSystemEventHandler):
                     ft.Text(
                         f"{new_name}",
                         size=12,
-                        color=ft.colors.WHITE,
+                        color=ft.Colors.WHITE,
                         weight=ft.FontWeight.W_600,
                     ),
                     ft.Text(
                         f"推定高さ:{estimated_height}",
                         style=text_style,
                         size=12,
-                        color=ft.colors.WHITE,
+                        color=ft.Colors.WHITE,
                         weight=ft.FontWeight.W_100,
                     ),
                     ft.Text(
                         f"[ {current_time} ]",
                         style=text_style,
                         size=10,
-                        color=ft.colors.WHITE,
+                        color=ft.Colors.WHITE,
                         weight=ft.FontWeight.W_100,
                     ),
                 ],
                 spacing=5,
             ),
             padding=10,
-            bgcolor=ft.colors.BLUE_GREY_900,
+            bgcolor=ft.Colors.BLUE_GREY_900,
             border_radius=10,
             margin=5,
         )
@@ -118,7 +127,7 @@ class ImageHandler(FileSystemEventHandler):
                 if len(self.view_controls) > 0:
                     top_container = self.view_controls[0]
                     if isinstance(top_container, ft.Container):
-                        top_container.border = ft.border.all(6, ft.colors.PINK_100)
+                        top_container.border = ft.border.all(6, ft.Colors.PINK_100)
                         if isinstance(top_container.content, ft.Text):
                             top_container.content.value = 'バーコードを読み取ってください'
 

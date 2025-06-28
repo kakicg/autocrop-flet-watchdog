@@ -56,6 +56,7 @@ def main(page: ft.Page):
         run_spacing=5,
     )
     side_bar = SideBar(page, main_view.controls, main_view)
+    page.side_bar = side_bar
 
     layout = ft.Row(
         [side_bar, main_view],
