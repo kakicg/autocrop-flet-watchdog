@@ -8,8 +8,8 @@ from sqlalchemy.orm import declarative_base
 class SideBar(ft.Container):
     def __init__(self, page:ft.Page, view_controls, main_view):
         super().__init__()
+        
         def set_item(event):
-            
             page.session.set("barcode_number", event.control.value)
             event.control.value = ""
             
@@ -37,10 +37,6 @@ class SideBar(ft.Container):
                     padding=8
                 ),
             )
-            horizontal_list_view = ft.ListView(
-                horizontal=True,
-                height=horizontal_list_view_height,
-            )
             main_view.scroll_to(offset=0, duration=1000)
             page.update()
 
@@ -62,7 +58,7 @@ class SideBar(ft.Container):
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
-            "自動撮影モード", 
+            "バーコードを読み取ってください", 
             style = ft.TextStyle(font_family="Noto Sans CJK JP"),
             color = ft.Colors.WHITE,
             size=14,
@@ -71,7 +67,7 @@ class SideBar(ft.Container):
             content=top_message_text,
             padding=10,
             width=float('inf'),
-            border = ft.border.all(6, ft.Colors.BLUE_100)
+            border = ft.border.all(6, ft.Colors.PINK_100)
         )
         # 中央の伸縮コンポーネント (B)
         middle_container = ft.ListView(
@@ -108,29 +104,9 @@ class SideBar(ft.Container):
             padding=0,
             width=float('inf')
         )
-        # 実測値設定用UI
-        self.calib_prompt = ft.Text(
-            "実測値設定モード: 2つの商品画像の推定値と実測値を入力してください。",
-            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
-            color=ft.Colors.WHITE,
-            size=14,
-        )
-        self.x1_input = ft.TextField(label="推定値1", width=120)
-        self.y1_input = ft.TextField(label="実測値1", width=120)
-        self.x2_input = ft.TextField(label="推定値2", width=120)
-        self.y2_input = ft.TextField(label="実測値2", width=120)
-        self.set_ab_button = ft.ElevatedButton("A,Bを計算して設定", on_click=self.set_ab)
-        self.calib_result = ft.Text("", color=ft.Colors.YELLOW, size=12)
-        self.calib_column = ft.Column([
-            self.calib_prompt,
-            ft.Row([self.x1_input, self.y1_input]),
-            ft.Row([self.x2_input, self.y2_input]),
-            self.set_ab_button,
-            self.calib_result
-        ], visible=False)
-        # Columnを使ってA, B, C, calib_columnを縦に配置
+        # Columnを使ってA, B, Cを縦に配置
         self.content = ft.Column(
-            controls=[top_message_container, middle_container, self.calib_column, foot_container],
+            controls=[top_message_container, middle_container, foot_container],
             spacing=10,
             expand=True
         )
@@ -145,40 +121,6 @@ class SideBar(ft.Container):
         self.foot_container = foot_container
         self.barcode_textfield = barcode_textfield
         self.middle_lists = middle_lists
-        self.calib_column = self.calib_column
         item_title_height = 40
         horizontal_list_view_height = 320
-        # モード切替時のUI更新
-        def update_mode():
-            mode = page.session.get("mode")
-            if mode == "calibration":
-                middle_container.visible = False
-                self.calib_column.visible = True
-            else:
-                middle_container.visible = True
-                self.calib_column.visible = False
-            self.update()
-        page.on_session_change = lambda _: update_mode()
-        update_mode()
-            
-    def set_ab(self, event):
-        try:
-            x1 = float(self.x1_input.value)
-            y1 = float(self.y1_input.value)
-            x2 = float(self.x2_input.value)
-            y2 = float(self.y2_input.value)
-            if x1 == x2:
-                self.calib_result.value = "推定値1と推定値2は異なる値にしてください。"
-                self.update()
-                return
-            from image_processing import A, B
-            A_new = (y2 - y1) / (x2 - x1)
-            B_new = y1 - A_new * x1
-            import image_processing
-            image_processing.A = A_new
-            image_processing.B = B_new
-            self.calib_result.value = f"A={A_new:.4f}, B={B_new:.2f} を設定しました。"
-        except Exception as e:
-            self.calib_result.value = f"エラー: {e}"
-        self.update()
 

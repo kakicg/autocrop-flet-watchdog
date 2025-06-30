@@ -3,8 +3,6 @@ import numpy as np
 import os
 
 PROCESSED_DIR = "./processed_images"
-A = -1  # 実寸変換用の係数A（今後変更可能）
-B = None  # 実寸変換用の係数B（今後変更可能）
 
 def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR):
     image = cv2.imread(original_image_path)
@@ -70,10 +68,8 @@ def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR)
     output_file_path = os.path.join(processed_folder, filename)
     cv2.imwrite(output_file_path, cropped_image)
     print(f"画像が '{output_file_path}' として保存されました。")
-    if B is None:
-        b = image.shape[0]
-    else:
-        b = B
-    estimated_height = y_min * A + b
+    a = -1
+    b = image.shape[0]
+    estimated_height = y_min * a + b
     return estimated_height, output_file_path
 

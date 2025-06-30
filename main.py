@@ -14,12 +14,12 @@ def main(page: ft.Page):
 
     def change_mode(event):
         current_mode = page.session.get("mode")
-        if current_mode is None or current_mode == "normal":
-            new_mode = "calibration"
+        if current_mode is None or current_mode == "single_angle":
+            new_mode = "multi_angle"
         else:
-            new_mode = "normal"
+            new_mode = "single_angle"
         page.session.set("mode", new_mode)
-        mode_text.value = f"モード: {'実測値設定モード' if new_mode == 'calibration' else '通常モード'}"
+        mode_text.value = f"モード: {'複数アングル' if new_mode == 'multi_angle' else '単一アングル'}"
         page.update()
 
     page.title = "Auto Crop App"
@@ -27,8 +27,8 @@ def main(page: ft.Page):
     page.window.maximized = True
     
     # デフォルトモードを設定
-    page.session.set("mode", "normal")
-    mode_text = ft.Text("モード: 通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
+    page.session.set("mode", "single_angle")
+    mode_text = ft.Text("モード: 単一角度", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
