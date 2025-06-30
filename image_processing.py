@@ -2,7 +2,11 @@ import cv2
 import numpy as np
 import os
 
-def process_image(original_image_path, filename, processed_folder="./processed_images"):
+PROCESSED_DIR = "./processed_images"
+A = -1  # 実寸変換用の係数A（今後変更可能）
+B = None  # 実寸変換用の係数B（今後変更可能）
+
+def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR):
     image = cv2.imread(original_image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
@@ -32,16 +36,16 @@ def process_image(original_image_path, filename, processed_folder="./processed_i
     # すべてのバウンディングボックスを結合
     merged_boxes = merge_boxes(bounding_boxes)
     # 結合されたバウンディングボックスを描画（赤色の矩形）
-    for box in merged_boxes:
-        cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+    # for box in merged_boxes:
+    #     cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
     
-    estimated_height = image.shape[0]
+    outerbox_height = image.shape[0]
+    y_min = merged_boxes[0][1]
     if len(merged_boxes)>0:
-        estimated_height = estimated_height - merged_boxes[0][1]
-    print(f"estimated_height:{estimated_height}")
-    outerbox_height = estimated_height
+        outerbox_height = outerbox_height - y_min
+    print(f"outerbox_height:{outerbox_height}")
     top_margin = 80
-    if image.shape[0] - estimated_height >= top_margin:
+    if y_min >= top_margin:
         outerbox_height += top_margin
     else:
         outerbox_height = image.shape[0]
@@ -54,12 +58,22 @@ def process_image(original_image_path, filename, processed_folder="./processed_i
     bottom_right = (left + outerbox_width , image.shape[0])
     print(f"bottom_right:{bottom_right}")
 
-    cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+    # top_left, bottom_right = (x1, y1), (x2, y2)
+    x1, y1 = top_left
+    x2, y2 = bottom_right
+
+    # 画像をトリミング
+    cropped_image = image[y1:y2, x1:x2]
 
     # 結果をファイルとして保存する
     os.makedirs(processed_folder, exist_ok=True)  # 保存先フォルダを作成
     output_file_path = os.path.join(processed_folder, filename)
-    cv2.imwrite(output_file_path, image)
+    cv2.imwrite(output_file_path, cropped_image)
     print(f"画像が '{output_file_path}' として保存されました。")
+    if B is None:
+        b = image.shape[0]
+    else:
+        b = B
+    estimated_height = y_min * A + b
     return estimated_height, output_file_path
 
