@@ -17,6 +17,8 @@ class ItemInfo(Base):
     precessed_url = Column(String, nullable=False)
     original_url = Column(String)
     height = Column(Float)
+    top_y = Column(Integer)
+    real_height = Column(Integer)
     created_at = Column(DateTime, default=datetime.now)
 
 # テーブルを作成

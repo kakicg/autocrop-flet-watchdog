@@ -14,12 +14,19 @@ def main(page: ft.Page):
 
     def change_mode(event):
         current_mode = page.session.get("mode")
-        if current_mode is None or current_mode == "single_angle":
-            new_mode = "multi_angle"
+        if current_mode is None or current_mode == "barcode_mode":
+            new_mode = "real_height_mode"
+            mode_text.value = "モード: 実測値入力モード"
+            # 実測値入力モード: 実測値欄を可視化、バーコード欄を不可視化
+            page.side_bar.real_height_textfield.visible = True
+            page.side_bar.barcode_textfield.visible = False
         else:
-            new_mode = "single_angle"
+            new_mode = "barcode_mode"
+            mode_text.value = "モード: 通常モード"
+            # 通常モード: バーコード欄を可視化、実測値欄を不可視化
+            page.side_bar.real_height_textfield.visible = False
+            page.side_bar.barcode_textfield.visible = True
         page.session.set("mode", new_mode)
-        mode_text.value = f"モード: {'複数アングル' if new_mode == 'multi_angle' else '単一アングル'}"
         page.update()
 
     page.title = "Auto Crop App"
@@ -28,7 +35,7 @@ def main(page: ft.Page):
     
     # デフォルトモードを設定
     page.session.set("mode", "single_angle")
-    mode_text = ft.Text("モード: 単一角度", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
+    mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
@@ -40,7 +47,7 @@ def main(page: ft.Page):
             mode_text,
             ft.PopupMenuButton(
                 items=[
-                    ft.PopupMenuItem(text="モード切り替え", on_click=change_mode),
+                    ft.PopupMenuItem(text="実測値入力", on_click=change_mode),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]

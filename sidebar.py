@@ -13,15 +13,6 @@ class SideBar(ft.Container):
             page.session.set("barcode_number", event.control.value)
             event.control.value = ""
             
-            # モードに応じてUIを更新
-            current_mode = page.session.get("mode")
-            if current_mode == "multi_angle":
-                barcode_textfield.visible = False
-                next_button.visible = True
-            else:
-                barcode_textfield.visible = True
-                next_button.visible = False
-            
             top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")
             top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'
@@ -40,10 +31,14 @@ class SideBar(ft.Container):
             main_view.scroll_to(offset=0, duration=1000)
             page.update()
 
+        def set_real_height(event):
+            page.session.set("real_height", event.control.value)
+            event.control.value = ""
+            page.update()
+
         def next_item(event):
             page.session.set("barcode_number", "")
             barcode_textfield.visible = True
-            next_button.visible = False
             top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
             top_message_container.content.value = 'バーコードを読み取ってください'
             page.update()
@@ -58,7 +53,7 @@ class SideBar(ft.Container):
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
-            "バーコードを読み取ってください", 
+            "自動入力モード", 
             style = ft.TextStyle(font_family="Noto Sans CJK JP"),
             color = ft.Colors.WHITE,
             size=14,
@@ -78,6 +73,15 @@ class SideBar(ft.Container):
         )
         middle_lists = middle_container.controls
         # 下部の固定コンポーネント (C)
+
+        real_height_textfield = ft.TextField(
+            on_submit=set_real_height,
+            on_blur=force_focus,
+            text_size=14,
+            autofocus=False,
+            visible=False,
+            bgcolor=ft.Colors.WHITE
+        )
         barcode_textfield = ft.TextField(
             on_submit=set_item,
             on_blur=force_focus,
@@ -87,15 +91,9 @@ class SideBar(ft.Container):
             autofocus=True,
             visible=True
         )
-        next_button = ft.CupertinoFilledButton(
-            content=ft.Text("次の商品撮影へ"),
-            opacity_on_click=0.3,
-            on_click=next_item,
-            width=float('inf'),
-            visible=False
-        )
+        
         foot_column = ft.Column(
-            controls=[barcode_textfield, next_button],
+            controls=[real_height_textfield, barcode_textfield],
             spacing=10,
             width=float('inf')
         )
@@ -120,6 +118,7 @@ class SideBar(ft.Container):
         self.top_message_text = top_message_text
         self.foot_container = foot_container
         self.barcode_textfield = barcode_textfield
+        self.real_height_textfield = real_height_textfield
         self.middle_lists = middle_lists
         item_title_height = 40
         horizontal_list_view_height = 320

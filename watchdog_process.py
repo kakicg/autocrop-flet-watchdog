@@ -6,6 +6,7 @@ from image_processing import process_image
 from item_db import ItemInfo, session
 import time
 from datetime import datetime
+from config import PROCESSED_DIR, WATCH_DIR, get_A, get_B, set_A_B
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
@@ -27,16 +28,9 @@ class ImageHandler(FileSystemEventHandler):
             return
         
         self.processed_files.add(image_path)
-        barcode_number = self.page.session.get('barcode_number')
         current_mode = self.page.session.get('mode')
-        
-        # バーコードが変更された場合、アングル番号をリセット
-        if barcode_number != self.last_barcode:
-            self.current_angle = 0
-            self.last_barcode = barcode_number
-        
+        barcode_number = self.page.session.get('barcode_number')
         if barcode_number:
-            self.current_angle += 1
             new_name = f"{barcode_number}.jpg"
             # --- SideBarのmiddle_listsを更新 ---
             if hasattr(self.page, 'side_bar'):
@@ -44,22 +38,45 @@ class ImageHandler(FileSystemEventHandler):
                     if isinstance(container, ft.Container) and hasattr(container, 'content'):
                         content = container.content
                         if isinstance(content, ft.Text) and content.value == barcode_number:
-                            container.bgcolor = "#028F68"
+                            container.bgcolor = "#3DBCE2"
                             content.color = "white"
                             break
         else:
             new_name = os.path.basename(image_path)
 
-        estimated_height, processed_path = process_image(image_path, new_name)
+        
+        real_height = self.page.session.get('real_height')
+
+    
+        top_y, processed_path = process_image(image_path, new_name)
+
+
+        
+        estimated_height = top_y * get_A() + get_B()
         
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
             precessed_url=processed_path,
             original_url=image_path,
-            height=float(estimated_height)
+            height=float(estimated_height),
+            top_y=int(top_y) if top_y is not None else None,
+            real_height=int(real_height) if real_height is not None else None
         )
         session.add(new_item)
         session.commit()
+
+        if real_height:
+            # 直近のtop_y, real_heightペアを2つ取得
+            recent_items = session.query(ItemInfo).filter(ItemInfo.top_y != None, ItemInfo.real_height != None).order_by(ItemInfo.id.desc()).limit(2).all()
+            if len(recent_items) == 2:
+                ty1, rh1 = recent_items[0].top_y, recent_items[0].real_height
+                ty2, rh2 = recent_items[1].top_y, recent_items[1].real_height
+                # 連立方程式を解く
+                if ty1 != ty2:
+                    a = (rh1 - rh2) / (ty1 - ty2)
+                    b = rh1 - a * ty1
+                    set_A_B(a, b)
+            self.page.session.set("real_height", None)
 
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
@@ -117,28 +134,19 @@ class ImageHandler(FileSystemEventHandler):
                     height=320,
                 ))
 
-            # single_angleモードの場合、画像処理完了後にバーコード情報をクリア
-            if current_mode == 'single_angle' and barcode_number:
+            if barcode_number:
                 self.page.session.set('barcode_number', '')
                 self.last_barcode = None
                 self.current_angle = 0
-                
-                # メッセージを更新
-                if len(self.view_controls) > 0:
-                    top_container = self.view_controls[0]
-                    if isinstance(top_container, ft.Container):
-                        top_container.border = ft.border.all(6, ft.Colors.PINK_100)
-                        if isinstance(top_container.content, ft.Text):
-                            top_container.content.value = 'バーコードを読み取ってください'
 
             self.page.update()
         except Exception as e:
             print(f"Error updating UI: {e}")
 
-def start_watchdog(page: ft.Page, view_controls, watch_folder="./watch_folder"):
-    os.makedirs(watch_folder, exist_ok=True)
+def start_watchdog(page: ft.Page, view_controls):
+    os.makedirs(WATCH_DIR, exist_ok=True)
     event_handler = ImageHandler(page, view_controls)
     observer = Observer()
-    observer.schedule(event_handler, watch_folder, recursive=False)
+    observer.schedule(event_handler, WATCH_DIR, recursive=False)
     observer.start()
     return observer 

@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 import os
+from config import PROCESSED_DIR, get_A, get_B
 
-PROCESSED_DIR = "./processed_images"
+# (No changes here yet, just preparing for import of constants from config.py)
 
-def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR):
+def process_image(original_image_path, filename):
     image = cv2.imread(original_image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
@@ -38,12 +39,12 @@ def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR)
     #     cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
     
     outerbox_height = image.shape[0]
-    y_min = merged_boxes[0][1]
+    top_y = merged_boxes[0][1]
     if len(merged_boxes)>0:
-        outerbox_height = outerbox_height - y_min
+        outerbox_height = outerbox_height - top_y
     print(f"outerbox_height:{outerbox_height}")
     top_margin = 80
-    if y_min >= top_margin:
+    if top_y >= top_margin:
         outerbox_height += top_margin
     else:
         outerbox_height = image.shape[0]
@@ -64,12 +65,10 @@ def process_image(original_image_path, filename, processed_folder=PROCESSED_DIR)
     cropped_image = image[y1:y2, x1:x2]
 
     # 結果をファイルとして保存する
-    os.makedirs(processed_folder, exist_ok=True)  # 保存先フォルダを作成
-    output_file_path = os.path.join(processed_folder, filename)
+    os.makedirs(PROCESSED_DIR, exist_ok=True)  # 保存先フォルダを作成
+    output_file_path = os.path.join(PROCESSED_DIR, filename)
     cv2.imwrite(output_file_path, cropped_image)
     print(f"画像が '{output_file_path}' として保存されました。")
-    a = -1
-    b = image.shape[0]
-    estimated_height = y_min * a + b
-    return estimated_height, output_file_path
+    estimated_height = top_y * get_A() + get_B()
+    return top_y, output_file_path
 
