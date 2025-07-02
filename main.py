@@ -13,19 +13,23 @@ def main(page: ft.Page):
         page.window.close()
 
     def change_mode(event):
+        print(f"change_mode: {page.session.get('mode')}")
         current_mode = page.session.get("mode")
+
         if current_mode is None or current_mode == "barcode_mode":
             new_mode = "real_height_mode"
-            mode_text.value = "モード: 実測値入力モード"
+            mode_text.value = "実測値入力モード"
             # 実測値入力モード: 実測値欄を可視化、バーコード欄を不可視化
             page.side_bar.real_height_textfield.visible = True
             page.side_bar.barcode_textfield.visible = False
+            page.side_bar.top_message_text.value = "実測値を入力してください"
         else:
             new_mode = "barcode_mode"
-            mode_text.value = "モード: 通常モード"
+            mode_text.value = "通常モード"
             # 通常モード: バーコード欄を可視化、実測値欄を不可視化
             page.side_bar.real_height_textfield.visible = False
             page.side_bar.barcode_textfield.visible = True
+            page.side_bar.top_message_text.value = "バーコード自動入力"
         page.session.set("mode", new_mode)
         page.update()
 
@@ -34,7 +38,7 @@ def main(page: ft.Page):
     page.window.maximized = True
     
     # デフォルトモードを設定
-    page.session.set("mode", "single_angle")
+    page.session.set("mode", "barcode_mode")
     mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
@@ -43,11 +47,12 @@ def main(page: ft.Page):
         title=ft.Text("商品撮影システム", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
         bgcolor=ft.Colors.ON_SURFACE_VARIANT,
+        color=ft.Colors.BLACK,
         actions=[
             mode_text,
             ft.PopupMenuButton(
                 items=[
-                    ft.PopupMenuItem(text="実測値入力", on_click=change_mode),
+                    ft.PopupMenuItem(text="入力モード切り替え", on_click=change_mode),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]

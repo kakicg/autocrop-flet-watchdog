@@ -53,7 +53,7 @@ class SideBar(ft.Container):
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
-            "自動入力モード", 
+            "バーコード自動入力", 
             style = ft.TextStyle(font_family="Noto Sans CJK JP"),
             color = ft.Colors.WHITE,
             size=14,
