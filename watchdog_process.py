@@ -92,7 +92,7 @@ class ImageHandler(FileSystemEventHandler):
                         src=abs_processed_path,
                         fit=ft.ImageFit.CONTAIN,
                         repeat=ft.ImageRepeat.NO_REPEAT,
-                        height=150
+                        height=200,  # 画像高さを200に
                     ),
                     ft.Text(
                         f"{new_name}",
@@ -121,12 +121,13 @@ class ImageHandler(FileSystemEventHandler):
             bgcolor=ft.Colors.BLUE_GREY_900,
             border_radius=10,
             margin=5,
+            height=300,  # コンテナの高さをさらに大きく
         )
 
         try:
             # メインビューのコントロールに追加
-            list_view = self.view_controls[0]  # 画像用ListViewは常に0番目
-            list_view.controls.insert(0, image_container)
+            grid_view = self.view_controls[0]  # 画像用GridViewは常に0番目
+            grid_view.controls.insert(0, image_container)
 
             if barcode_number:
                 self.page.session.set('barcode_number', '')

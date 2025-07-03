@@ -61,25 +61,25 @@ def main(page: ft.Page):
             ),
         ],
     )
-    image_list_view = ft.ListView(
-        controls=[],
-        horizontal=True,
-        height=320,
+    image_grid_view = ft.GridView(
         expand=True,
-        width=float('inf'),
+        max_extent=180,         # 画像1枚の最大幅
+        child_aspect_ratio=0.4, # 画像の縦横比を調整
+        spacing=10,
+        run_spacing=10,
     )
-    side_bar = SideBar(page, [image_list_view], None)
+    side_bar = SideBar(page, [image_grid_view], None)
     page.side_bar = side_bar
 
     layout = ft.Row(
-        [side_bar, image_list_view],
+        [side_bar, image_grid_view],
         spacing=0,
         expand=True,
         alignment=ft.MainAxisAlignment.START,
     )
 
     page.add(layout)
-    page.observer = start_watchdog(page, [image_list_view])
+    page.observer = start_watchdog(page, [image_grid_view])
     page.update()
 
 # Fletアプリケーションを実行
