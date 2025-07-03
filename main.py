@@ -19,17 +19,19 @@ def main(page: ft.Page):
         if current_mode is None or current_mode == "barcode_mode":
             new_mode = "real_height_mode"
             mode_text.value = "実測値入力モード"
-            # 実測値入力モード: 実測値欄を可視化、バーコード欄を不可視化
+            page.session.set("real_height_step", 1)
+            page.session.set("real_height_input_waiting", True)
+            page.side_bar.top_message_text.value = "1件目の商品の実測値を入力してください。"
             page.side_bar.real_height_textfield.visible = True
             page.side_bar.barcode_textfield.visible = False
-            page.side_bar.top_message_text.value = "実測値を入力してください"
         else:
             new_mode = "barcode_mode"
             mode_text.value = "通常モード"
-            # 通常モード: バーコード欄を可視化、実測値欄を不可視化
+            page.session.set("real_height_step", None)
+            page.session.set("real_height_input_waiting", None)
+            page.side_bar.top_message_text.value = "バーコード自動入力"
             page.side_bar.real_height_textfield.visible = False
             page.side_bar.barcode_textfield.visible = True
-            page.side_bar.top_message_text.value = "バーコード自動入力"
         page.session.set("mode", new_mode)
         page.update()
 

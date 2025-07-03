@@ -34,6 +34,11 @@ class SideBar(ft.Container):
         def set_real_height(event):
             page.session.set("real_height", event.control.value)
             event.control.value = ""
+            # 入力欄を非表示、メッセージ切り替え
+            page.session.set("real_height_input_waiting", False)
+            step = page.session.get("real_height_step")
+            self.real_height_textfield.visible = False
+            self.top_message_text.value = f"{step}件目の商品の撮影を行ってください"
             page.update()
 
         def next_item(event):

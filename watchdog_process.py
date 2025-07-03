@@ -140,6 +140,31 @@ class ImageHandler(FileSystemEventHandler):
                 self.current_angle = 0
 
             self.page.update()
+
+            # --- 実測値入力モードの段階的処理 ---
+            if current_mode == "real_height_mode":
+                step = self.page.session.get("real_height_step")
+                input_waiting = self.page.session.get("real_height_input_waiting")
+                if step == 1 and not input_waiting:
+                    # 1件目の撮影完了
+                    self.page.side_bar.top_message_text.value = "1件目の商品の実測値登録が完了しました。\n引き続き2件目の商品の実測値を入力してください。"
+                    self.page.session.set("real_height_step", 2)
+                    self.page.session.set("real_height_input_waiting", True)
+                    self.page.side_bar.real_height_textfield.visible = True
+                    self.page.update()
+                elif step == 2 and not input_waiting:
+                    # 2件目の撮影完了
+                    self.page.side_bar.top_message_text.value = "2件目の商品の実測値登録が完了しました。"
+                    self.page.update()
+                    import time
+                    time.sleep(3)
+                    self.page.session.set("mode", "barcode_mode")
+                    self.page.session.set("real_height_step", None)
+                    self.page.session.set("real_height_input_waiting", None)
+                    self.page.side_bar.top_message_text.value = "バーコード自動入力"
+                    self.page.side_bar.real_height_textfield.visible = False
+                    self.page.side_bar.barcode_textfield.visible = True
+                    self.page.update()
         except Exception as e:
             print(f"Error updating UI: {e}")
 
