@@ -125,14 +125,8 @@ class ImageHandler(FileSystemEventHandler):
 
         try:
             # メインビューのコントロールに追加
-            if len(self.view_controls) > 1:
-                self.view_controls[1].controls.insert(0, image_container)
-            else:
-                self.view_controls.insert(1, ft.ListView(
-                    controls=[image_container],
-                    horizontal=True,
-                    height=320,
-                ))
+            list_view = self.view_controls[0]  # 画像用ListViewは常に0番目
+            list_view.controls.insert(0, image_container)
 
             if barcode_number:
                 self.page.session.set('barcode_number', '')

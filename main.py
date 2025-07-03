@@ -61,30 +61,25 @@ def main(page: ft.Page):
             ),
         ],
     )
-    main_view = ft.GridView(
-        expand=1,
-        runs_count=5,
-        max_extent=150,
-        child_aspect_ratio=0.45,
-        spacing=5,
-        run_spacing=5,
+    image_list_view = ft.ListView(
+        controls=[],
+        horizontal=True,
+        height=320,
+        expand=True,
+        width=float('inf'),
     )
-    side_bar = SideBar(page, main_view.controls, main_view)
+    side_bar = SideBar(page, [image_list_view], None)
     page.side_bar = side_bar
 
     layout = ft.Row(
-        [side_bar, main_view],
+        [side_bar, image_list_view],
         spacing=0,
         expand=True,
         alignment=ft.MainAxisAlignment.START,
     )
 
-    # レイアウトをページに追加
     page.add(layout)
-    
-    # Watchdogを起動
-    page.observer = start_watchdog(page, main_view.controls)
-    
+    page.observer = start_watchdog(page, [image_list_view])
     page.update()
 
 # Fletアプリケーションを実行
