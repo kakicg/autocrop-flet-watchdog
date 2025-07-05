@@ -80,7 +80,13 @@ class ImageHandler(FileSystemEventHandler):
 
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
-        
+
+        # オリジナル画像を削除
+        try:
+            os.remove(image_path)
+        except Exception as e:
+            print(f"Error deleting original image: {e}")
+
         # 現在のタイムスタンプを取得
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         

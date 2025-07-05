@@ -85,7 +85,8 @@ class SideBar(ft.Container):
             text_size=14,
             autofocus=False,
             visible=False,
-            bgcolor=ft.Colors.WHITE
+            bgcolor=ft.Colors.WHITE,
+            color=ft.Colors.BLACK
         )
         barcode_textfield = ft.TextField(
             on_submit=set_item,
