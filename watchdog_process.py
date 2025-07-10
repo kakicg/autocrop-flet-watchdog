@@ -6,7 +6,7 @@ from image_processing import process_image
 from item_db import ItemInfo, session
 import time
 from datetime import datetime
-from config import PROCESSED_DIR, WATCH_DIR, get_A, get_B, set_A_B
+from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
@@ -170,9 +170,10 @@ class ImageHandler(FileSystemEventHandler):
             print(f"Error updating UI: {e}")
 
 def start_watchdog(page: ft.Page, view_controls):
-    os.makedirs(WATCH_DIR, exist_ok=True)
+    watch_dir = get_WATCH_DIR()
+    os.makedirs(watch_dir, exist_ok=True)
     event_handler = ImageHandler(page, view_controls)
     observer = Observer()
-    observer.schedule(event_handler, WATCH_DIR, recursive=False)
+    observer.schedule(event_handler, watch_dir, recursive=False)
     observer.start()
     return observer 

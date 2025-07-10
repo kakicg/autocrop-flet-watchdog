@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from config import PROCESSED_DIR, get_A, get_B
+from config import get_PROCESSED_DIR, get_A, get_B
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
@@ -65,8 +65,9 @@ def process_image(original_image_path, filename):
     cropped_image = image[y1:y2, x1:x2]
 
     # 結果をファイルとして保存する
-    os.makedirs(PROCESSED_DIR, exist_ok=True)  # 保存先フォルダを作成
-    output_file_path = os.path.join(PROCESSED_DIR, filename)
+    processed_dir = get_PROCESSED_DIR()
+    os.makedirs(processed_dir, exist_ok=True)  # 保存先フォルダを作成
+    output_file_path = os.path.join(processed_dir, filename)
     cv2.imwrite(output_file_path, cropped_image)
     print(f"画像が '{output_file_path}' として保存されました。")
     estimated_height = top_y * get_A() + get_B()

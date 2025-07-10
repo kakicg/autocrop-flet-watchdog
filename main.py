@@ -5,6 +5,7 @@ import optparse
 import os
 
 def main(page: ft.Page):
+    directory_settings_mode = {"active": False}  # Use dict for mutability in closures
     def terminate(event):
         page.session.set("camera_loop", False)
         if hasattr(page, 'observer'):
@@ -35,6 +36,18 @@ def main(page: ft.Page):
         page.session.set("mode", new_mode)
         page.update()
 
+    def open_directory_settings(event):
+        directory_settings_mode["active"] = True
+        page.side_bar.set_barcode_field_visible(False)
+        page.side_bar.top_message_text.value = "ディレクトリ設定モード中です。設定後は再起動してください。"
+        page.update()
+
+    def close_directory_settings(event):
+        directory_settings_mode["active"] = False
+        page.side_bar.set_barcode_field_visible(True)
+        page.side_bar.top_message_text.value = "バーコード自動入力"
+        page.update()
+
     page.title = "Auto Crop App"
     page.theme_mode = ft.ThemeMode.DARK
     page.window.maximized = True
@@ -55,6 +68,8 @@ def main(page: ft.Page):
             ft.PopupMenuButton(
                 items=[
                     ft.PopupMenuItem(text="入力モード切り替え", on_click=change_mode),
+                    ft.PopupMenuItem(text="ディレクトリ設定", on_click=open_directory_settings),
+                    ft.PopupMenuItem(text="ディレクトリ設定終了", on_click=close_directory_settings),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]
@@ -85,7 +100,7 @@ def main(page: ft.Page):
 # Fletアプリケーションを実行
 if __name__ == "__main__":
     ft.app(
-        main,
-        view=ft.AppView.WEB_BROWSER,
-        assets_dir=os.path.dirname(__file__),
+        target=main,
+        view=None,
     )
+    

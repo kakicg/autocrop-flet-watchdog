@@ -3,6 +3,7 @@ import time
 import random
 import colorsys
 from sqlalchemy.orm import declarative_base
+from config import set_PROCESSED_DIR, set_WATCH_DIR, get_PROCESSED_DIR, get_WATCH_DIR
 
 
 class SideBar(ft.Container):
@@ -108,9 +109,53 @@ class SideBar(ft.Container):
             padding=0,
             width=float('inf')
         )
-        # Columnを使ってA, B, Cを縦に配置
+        # --- Directory settings UI ---
+        processed_dir_field = ft.TextField(
+            label="保存先ディレクトリ (PROCESSED_DIR)",
+            value=get_PROCESSED_DIR(),
+            width=220,
+            dense=True,
+        )
+        watch_dir_field = ft.TextField(
+            label="監視フォルダ (WATCH_DIR)",
+            value=get_WATCH_DIR(),
+            width=220,
+            dense=True,
+        )
+        def update_processed_dir(event):
+            set_PROCESSED_DIR(processed_dir_field.value)
+            page.snack_bar = ft.SnackBar(ft.Text("保存先ディレクトリを更新しました。再起動が必要です。"))
+            page.snack_bar.open = True
+            page.update()
+        def update_watch_dir(event):
+            set_WATCH_DIR(watch_dir_field.value)
+            page.snack_bar = ft.SnackBar(ft.Text("監視フォルダを更新しました。再起動が必要です。"))
+            page.snack_bar.open = True
+            page.update()
+        def processed_dir_pick_result(e):
+            if e.path:
+                processed_dir_field.value = e.path
+                processed_dir_field.update()
+        processed_dir_picker = ft.FilePicker(on_result=processed_dir_pick_result)
+        page.overlay.append(processed_dir_picker)
+        processed_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: processed_dir_picker.get_directory_path())
+        processed_dir_button = ft.ElevatedButton("更新", on_click=update_processed_dir)
+        def watch_dir_pick_result(e):
+            if e.path:
+                watch_dir_field.value = e.path
+                watch_dir_field.update()
+        watch_dir_picker = ft.FilePicker(on_result=watch_dir_pick_result)
+        page.overlay.append(watch_dir_picker)
+        watch_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: watch_dir_picker.get_directory_path())
+        watch_dir_button = ft.ElevatedButton("更新", on_click=update_watch_dir)
+        dir_settings_column = ft.Column([
+            ft.Row([processed_dir_field, processed_dir_pick_button, processed_dir_button], alignment=ft.MainAxisAlignment.START),
+            ft.Row([watch_dir_field, watch_dir_pick_button, watch_dir_button], alignment=ft.MainAxisAlignment.START),
+        ], spacing=5)
+        # ---
+        # Columnを使ってA, B, C, directory settingsを縦に配置
         self.content = ft.Column(
-            controls=[top_message_container, middle_container, foot_container],
+            controls=[top_message_container, middle_container, foot_container, dir_settings_column],
             spacing=10,
             expand=True
         )
@@ -128,4 +173,8 @@ class SideBar(ft.Container):
         self.middle_lists = middle_lists
         item_title_height = 40
         horizontal_list_view_height = 320
+
+    def set_barcode_field_visible(self, visible: bool):
+        self.barcode_textfield.visible = visible
+        self.barcode_textfield.update()
 
