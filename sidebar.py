@@ -170,6 +170,7 @@ class SideBar(ft.Container):
         self.watch_dir_row = watch_dir_row
         self.processed_dir_picker = processed_dir_picker
         self.watch_dir_picker = watch_dir_picker
+        self.barcode_textfield = barcode_textfield
 
     def set_barcode_field_visible(self, visible: bool):
         self.barcode_textfield.visible = visible
