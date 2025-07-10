@@ -3,6 +3,7 @@ from sidebar import SideBar
 from watchdog_process import start_watchdog
 import optparse
 import os
+import asyncio
 
 def main(page: ft.Page):
     directory_settings_mode = {"active": False}  # Use dict for mutability in closures
@@ -42,7 +43,7 @@ def main(page: ft.Page):
         page.side_bar.set_watch_dir_setting_visible(False)
         page.side_bar.top_message_text.value = "保存先ディレクトリ設定モードです。設定後は再起動してください。"
         page.update()
-        page.side_bar.processed_dir_picker.get_directory_path()
+        page.run_async(lambda: asyncio.sleep(0.1), after=lambda: page.side_bar.processed_dir_picker.get_directory_path())
 
     def open_watch_dir_setting(event):
         page.side_bar.set_barcode_field_visible(False)
@@ -50,7 +51,7 @@ def main(page: ft.Page):
         page.side_bar.set_watch_dir_setting_visible(True)
         page.side_bar.top_message_text.value = "監視フォルダ設定モードです。設定後は再起動してください。"
         page.update()
-        page.side_bar.watch_dir_picker.get_directory_path()
+        page.run_async(lambda: asyncio.sleep(0.1), after=lambda: page.side_bar.watch_dir_picker.get_directory_path())
 
     page.title = "Auto Crop App"
     page.theme_mode = ft.ThemeMode.DARK
