@@ -126,11 +126,15 @@ class SideBar(ft.Container):
             set_PROCESSED_DIR(processed_dir_field.value)
             page.snack_bar = ft.SnackBar(ft.Text("保存先ディレクトリを更新しました。再起動が必要です。"))
             page.snack_bar.open = True
+            self.set_processed_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
             page.update()
         def update_watch_dir(event):
             set_WATCH_DIR(watch_dir_field.value)
             page.snack_bar = ft.SnackBar(ft.Text("監視フォルダを更新しました。再起動が必要です。"))
             page.snack_bar.open = True
+            self.set_watch_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
             page.update()
         def processed_dir_pick_result(e):
             if e.path:
@@ -140,6 +144,7 @@ class SideBar(ft.Container):
         page.overlay.append(processed_dir_picker)
         processed_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: processed_dir_picker.get_directory_path())
         processed_dir_button = ft.ElevatedButton("更新", on_click=update_processed_dir)
+        processed_dir_row = ft.Row([processed_dir_field, processed_dir_pick_button, processed_dir_button], alignment=ft.MainAxisAlignment.START, visible=False)
         def watch_dir_pick_result(e):
             if e.path:
                 watch_dir_field.value = e.path
@@ -148,9 +153,10 @@ class SideBar(ft.Container):
         page.overlay.append(watch_dir_picker)
         watch_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: watch_dir_picker.get_directory_path())
         watch_dir_button = ft.ElevatedButton("更新", on_click=update_watch_dir)
+        watch_dir_row = ft.Row([watch_dir_field, watch_dir_pick_button, watch_dir_button], alignment=ft.MainAxisAlignment.START, visible=False)
         dir_settings_column = ft.Column([
-            ft.Row([processed_dir_field, processed_dir_pick_button, processed_dir_button], alignment=ft.MainAxisAlignment.START),
-            ft.Row([watch_dir_field, watch_dir_pick_button, watch_dir_button], alignment=ft.MainAxisAlignment.START),
+            processed_dir_row,
+            watch_dir_row,
         ], spacing=5)
         # ---
         # Columnを使ってA, B, C, directory settingsを縦に配置
@@ -159,22 +165,21 @@ class SideBar(ft.Container):
             spacing=10,
             expand=True
         )
-
-        # サイドバーのスタイル
-        self.width = 300
-        self.height = float('inf')
-        self.bgcolor = ft.Colors.BLUE_GREY_800
-        self.padding = ft.padding.all(10)
-        self.margin = ft.margin.all(0)
-        self.top_message_text = top_message_text
-        self.foot_container = foot_container
-        self.barcode_textfield = barcode_textfield
-        self.real_height_textfield = real_height_textfield
-        self.middle_lists = middle_lists
-        item_title_height = 40
-        horizontal_list_view_height = 320
+        # Store for later control
+        self.processed_dir_row = processed_dir_row
+        self.watch_dir_row = watch_dir_row
+        self.processed_dir_picker = processed_dir_picker
+        self.watch_dir_picker = watch_dir_picker
 
     def set_barcode_field_visible(self, visible: bool):
         self.barcode_textfield.visible = visible
         self.barcode_textfield.update()
+
+    def set_processed_dir_setting_visible(self, visible: bool):
+        self.processed_dir_row.visible = visible
+        self.processed_dir_row.update()
+
+    def set_watch_dir_setting_visible(self, visible: bool):
+        self.watch_dir_row.visible = visible
+        self.watch_dir_row.update()
 

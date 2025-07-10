@@ -36,17 +36,21 @@ def main(page: ft.Page):
         page.session.set("mode", new_mode)
         page.update()
 
-    def open_directory_settings(event):
-        directory_settings_mode["active"] = True
+    def open_processed_dir_setting(event):
         page.side_bar.set_barcode_field_visible(False)
-        page.side_bar.top_message_text.value = "ディレクトリ設定モード中です。設定後は再起動してください。"
+        page.side_bar.set_processed_dir_setting_visible(True)
+        page.side_bar.set_watch_dir_setting_visible(False)
+        page.side_bar.top_message_text.value = "保存先ディレクトリ設定モードです。設定後は再起動してください。"
         page.update()
+        page.side_bar.processed_dir_picker.get_directory_path()
 
-    def close_directory_settings(event):
-        directory_settings_mode["active"] = False
-        page.side_bar.set_barcode_field_visible(True)
-        page.side_bar.top_message_text.value = "バーコード自動入力"
+    def open_watch_dir_setting(event):
+        page.side_bar.set_barcode_field_visible(False)
+        page.side_bar.set_processed_dir_setting_visible(False)
+        page.side_bar.set_watch_dir_setting_visible(True)
+        page.side_bar.top_message_text.value = "監視フォルダ設定モードです。設定後は再起動してください。"
         page.update()
+        page.side_bar.watch_dir_picker.get_directory_path()
 
     page.title = "Auto Crop App"
     page.theme_mode = ft.ThemeMode.DARK
@@ -68,8 +72,8 @@ def main(page: ft.Page):
             ft.PopupMenuButton(
                 items=[
                     ft.PopupMenuItem(text="入力モード切り替え", on_click=change_mode),
-                    ft.PopupMenuItem(text="ディレクトリ設定", on_click=open_directory_settings),
-                    ft.PopupMenuItem(text="ディレクトリ設定終了", on_click=close_directory_settings),
+                    ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
+                    ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]
