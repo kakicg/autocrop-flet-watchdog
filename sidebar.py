@@ -17,14 +17,14 @@ class SideBar(ft.Container):
             top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")
             top_message_container.content.value = f'[ {current_barcode_number} ]を撮影中...'
-            middle_lists.insert(0, 
+            self.middle_lists.insert(0, 
                 ft.Container(
                     content=ft.Text(current_barcode_number, 
                                 color="black",
                             ),
                     bgcolor="#ffffe0",
                     expand=True,
-                    on_click=tile_clicked,
+                    # on_click=tile_clicked,
                     margin=8,
                     padding=8
                 ),
@@ -53,10 +53,10 @@ class SideBar(ft.Container):
         def force_focus(evet):
             barcode_textfield.focus()
 
-        def tile_clicked(event):
-            index = middle_lists.index(event.control)
-            offset_pos = (horizontal_list_view_height + item_title_height) * index
-            main_view.scroll_to(offset=offset_pos, duration=1000)
+        # def tile_clicked(event):
+        #     index = self.middle_lists.index(event.control)
+        #     offset_pos = (horizontal_list_view_height + item_title_height) * index
+        #     main_view.scroll_to(offset=offset_pos, duration=1000)
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(
@@ -78,7 +78,7 @@ class SideBar(ft.Container):
             padding=7,
             width=float('inf'),
         )
-        middle_lists = middle_container.controls
+        self.middle_lists = middle_container.controls
         # 下部の固定コンポーネント (C)
 
         real_height_textfield = ft.TextField(
