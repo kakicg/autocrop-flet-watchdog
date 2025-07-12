@@ -29,7 +29,8 @@ class SideBar(ft.Container):
                     padding=8
                 ),
             )
-            main_view.scroll_to(offset=0, duration=1000)
+            if main_view is not None:
+                main_view.scroll_to(offset=0, duration=1000)
             page.update()
 
         def set_real_height(event):
