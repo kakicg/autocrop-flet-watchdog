@@ -79,25 +79,26 @@ def main(page: ft.Page):
             ),
         ],
     )
-    image_grid_view = ft.GridView(
-        expand=True,
-        max_extent=180,         # 画像1枚の最大幅
-        child_aspect_ratio=0.4, # 画像の縦横比を調整
-        spacing=10,
-        run_spacing=10,
+    main_view = ft.GridView(
+        expand=1,
+        runs_count=5,
+        max_extent=150,
+        child_aspect_ratio=0.45,
+        spacing=5,
+        run_spacing=5,
     )
-    side_bar = SideBar(page, [image_grid_view], None)
+    side_bar = SideBar(page, main_view.controls, main_view)
     page.side_bar = side_bar
 
     layout = ft.Row(
-        [side_bar, image_grid_view],
+        [side_bar, main_view],
         spacing=0,
         expand=True,
         alignment=ft.MainAxisAlignment.START,
     )
 
     page.add(layout)
-    page.observer = start_watchdog(page, [image_grid_view])
+    page.observer = start_watchdog(page, [main_view])
     page.update()
 
 # Fletアプリケーションを実行
