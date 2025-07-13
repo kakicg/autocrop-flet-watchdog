@@ -132,10 +132,6 @@ class ImageHandler(FileSystemEventHandler):
             grid_view.controls.insert(0, image_container)
             grid_view.update()
 
-            print(f"self.page.main_view: {self.page.main_view}")
-            print(f"len(self.page.main_view.controls): {len(self.page.main_view.controls)}")
-            print(f"type(self.page.main_view): {type(self.page.main_view)}")
-
             if barcode_number:
                 self.page.session.set('barcode_number', '')
                 self.last_barcode = None

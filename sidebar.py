@@ -60,7 +60,8 @@ class SideBar(ft.Container):
 
         def tile_clicked(event):
             index = self.middle_lists.index(event.control)
-            offset_pos = (horizontal_list_view_height + item_title_height) * index
+            # offset_pos = (horizontal_list_view_height + item_title_height) * index
+            offset_pos = index * 100
             page.main_view.scroll_to(offset=offset_pos, duration=1000)
            
         # 上部の固定コンポーネント (A)
