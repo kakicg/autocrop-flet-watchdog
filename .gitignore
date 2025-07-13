@@ -7,3 +7,9 @@ counter/
 _test/
 _sub/
 .DS_Store
+tests/
+processed_images/
+processed/
+watch/
+watch_folder/
+.pytest_cache/

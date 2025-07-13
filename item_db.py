@@ -14,6 +14,7 @@ class ItemInfo(Base):
     __tablename__ = "item_info"
     id = Column(Integer, primary_key=True)
     barcode = Column(String, nullable=False)
+    barcode_whole = Column(String)
     precessed_url = Column(String, nullable=False)
     original_url = Column(String)
     height = Column(Float)
