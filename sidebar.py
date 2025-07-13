@@ -11,7 +11,13 @@ class SideBar(ft.Container):
         super().__init__()
         
         def set_item(event):
-            page.session.set("barcode_number", event.control.value)
+            # barcode_wholeとしてセット
+            barcode_whole = event.control.value
+            page.session.set("barcode_whole", barcode_whole)
+            # 数字以外を除去し、先頭6文字をbarcode_numberとしてセット
+            import re
+            barcode_number = re.sub(r'\D', '', barcode_whole)[:6]
+            page.session.set("barcode_number", barcode_number)
             event.control.value = ""
             
             top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)

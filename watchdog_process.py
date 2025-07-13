@@ -30,6 +30,7 @@ class ImageHandler(FileSystemEventHandler):
         self.processed_files.add(image_path)
         current_mode = self.page.session.get('mode')
         barcode_number = self.page.session.get('barcode_number')
+        barcode_whole = self.page.session.get('barcode_whole')
         if barcode_number:
             new_name = f"{barcode_number}.jpg"
             # --- SideBarのmiddle_listsを更新 ---
@@ -49,6 +50,7 @@ class ImageHandler(FileSystemEventHandler):
         estimated_height = top_y * get_A() + get_B()
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
+            barcode_whole=barcode_whole if barcode_whole else None,
             precessed_url=processed_path,
             original_url=image_path,
             height=float(estimated_height),
