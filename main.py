@@ -83,12 +83,22 @@ def main(page: ft.Page):
         expand=1,
         runs_count=5,
         max_extent=150,
+        child_aspect_ratio=0.66,
+        spacing=5,
+        run_spacing=5,
+    )
+    main_view = ft.GridView(
+        expand=1,
+        runs_count=5,
+        max_extent=150,
         child_aspect_ratio=0.45,
         spacing=5,
         run_spacing=5,
     )
-    side_bar = SideBar(page, main_view.controls, main_view)
+    side_bar = SideBar(page, main_view.controls)
+    side_bar.width = 300
     page.side_bar = side_bar
+    page.main_view = main_view
 
     layout = ft.Row(
         [side_bar, main_view],

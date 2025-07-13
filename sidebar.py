@@ -7,7 +7,7 @@ from config import set_PROCESSED_DIR, set_WATCH_DIR, get_PROCESSED_DIR, get_WATC
 
 
 class SideBar(ft.Container):
-    def __init__(self, page:ft.Page, view_controls, main_view):
+    def __init__(self, page:ft.Page, view_controls):
         super().__init__()
         
         def set_item(event):
@@ -29,8 +29,7 @@ class SideBar(ft.Container):
                     padding=8
                 ),
             )
-            if main_view is not None:
-                main_view.scroll_to(offset=0, duration=1000)
+            page.main_view.scroll_to(offset=0, duration=1000)
             page.update()
 
         def set_real_height(event):
@@ -53,10 +52,10 @@ class SideBar(ft.Container):
         def force_focus(evet):
             barcode_textfield.focus()
 
-        # def tile_clicked(event):
-        #     index = self.middle_lists.index(event.control)
-        #     offset_pos = (horizontal_list_view_height + item_title_height) * index
-        #     main_view.scroll_to(offset=offset_pos, duration=1000)
+        def tile_clicked(event):
+            index = self.middle_lists.index(event.control)
+            offset_pos = (horizontal_list_view_height + item_title_height) * index
+            page.main_view.scroll_to(offset=offset_pos, duration=1000)
            
         # 上部の固定コンポーネント (A)
         top_message_text = ft.Text(

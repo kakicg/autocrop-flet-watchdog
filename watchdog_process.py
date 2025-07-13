@@ -44,16 +44,9 @@ class ImageHandler(FileSystemEventHandler):
         else:
             new_name = os.path.basename(image_path)
 
-        
         real_height = self.page.session.get('real_height')
-
-    
         top_y, processed_path = process_image(image_path, new_name)
-
-
-        
         estimated_height = top_y * get_A() + get_B()
-        
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
             precessed_url=processed_path,
@@ -132,13 +125,18 @@ class ImageHandler(FileSystemEventHandler):
 
         try:
             # メインビューのコントロールに追加
-            grid_view = self.view_controls[0]  # 画像用GridViewは常に0番目
+            
+            grid_view = self.view_controls[0]
             grid_view.controls.insert(0, image_container)
+            grid_view.update()
+
+            print(f"self.page.main_view: {self.page.main_view}")
+            print(f"len(self.page.main_view.controls): {len(self.page.main_view.controls)}")
+            print(f"type(self.page.main_view): {type(self.page.main_view)}")
 
             if barcode_number:
                 self.page.session.set('barcode_number', '')
                 self.last_barcode = None
-                self.current_angle = 0
 
             self.page.update()
 
@@ -166,6 +164,7 @@ class ImageHandler(FileSystemEventHandler):
                     self.page.side_bar.real_height_textfield.visible = False
                     self.page.side_bar.barcode_textfield.visible = True
                     self.page.update()
+                
         except Exception as e:
             print(f"Error updating UI: {e}")
 
