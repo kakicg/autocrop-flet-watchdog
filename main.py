@@ -101,7 +101,7 @@ def main(page: ft.Page):
     page.main_view = main_view
 
     layout = ft.Row(
-        [side_bar, main_view],
+        [main_view, side_bar],
         spacing=0,
         expand=True,
         alignment=ft.MainAxisAlignment.START,

@@ -73,7 +73,7 @@ class SideBar(ft.Container):
         )
         top_message_container = ft.Container(
             content=top_message_text,
-            padding=10,
+            padding=ft.padding.symmetric(vertical=2, horizontal=10),  # ← 縦方向のpaddingを小さく
             width=float('inf'),
             border = ft.border.all(6, ft.Colors.PINK_100)
         )
@@ -94,15 +94,16 @@ class SideBar(ft.Container):
             autofocus=False,
             visible=False,
             bgcolor=ft.Colors.WHITE,
-            color=ft.Colors.BLACK
+            color=ft.Colors.BLACK,
+            dense=True  # ← 追加
         )
         self.real_height_textfield = real_height_textfield
         barcode_textfield = ft.TextField(
             on_submit=set_item,
             on_blur=force_focus,
-            border_color=ft.Colors.BLUE_GREY_700,
-            cursor_color=ft.Colors.BLUE_GREY_700,
-            text_size=8,
+            border_color=ft.Colors.BLACK,
+            cursor_color=ft.Colors.BLACK,
+            text_size=6,
             autofocus=True,
             visible=True
         )
@@ -166,10 +167,9 @@ class SideBar(ft.Container):
             processed_dir_row,
             watch_dir_row,
         ], spacing=5)
-        # ---
-        # Columnを使ってA, B, C, directory settingsを縦に配置
+        
         self.content = ft.Column(
-            controls=[top_message_container, middle_container, foot_container, dir_settings_column],
+            controls=[foot_container, real_height_textfield, top_message_container, middle_container, dir_settings_column],
             spacing=10,
             expand=True
         )
