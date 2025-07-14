@@ -70,7 +70,7 @@ def main(page: ft.Page):
             mode_text,
             ft.PopupMenuButton(
                 items=[
-                    ft.PopupMenuItem(text="入力モード切り替え", on_click=change_mode),
+                    ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
                     ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
                     ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
                     ft.PopupMenuItem(),  # divider

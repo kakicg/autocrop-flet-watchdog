@@ -161,6 +161,9 @@ class ImageHandler(FileSystemEventHandler):
                     self.page.side_bar.top_message_text.value = "バーコード自動入力"
                     self.page.side_bar.real_height_textfield.visible = False
                     self.page.side_bar.barcode_textfield.visible = True
+                    # mode_textを通常モードに戻す
+                    if hasattr(self.page, 'mode_text'):
+                        self.page.mode_text.value = "通常モード"
                     self.page.update()
                 
         except Exception as e:

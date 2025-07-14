@@ -96,6 +96,7 @@ class SideBar(ft.Container):
             bgcolor=ft.Colors.WHITE,
             color=ft.Colors.BLACK
         )
+        self.real_height_textfield = real_height_textfield
         barcode_textfield = ft.TextField(
             on_submit=set_item,
             on_blur=force_focus,
