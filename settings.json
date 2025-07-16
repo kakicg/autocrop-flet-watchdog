@@ -1,6 +1,6 @@
 {
   "A": -5.0,
   "B": 3370.0,
-  "PROCESSED_DIR": "./processed",
-  "WATCH_DIR": "./watch_folder"
+  "PROCESSED_DIR": "C:\\Users\\admin\\Documents\\program\\autocrop-flet-watchdog\\processed",
+  "WATCH_DIR": "C:\\Users\\admin\\Desktop\\watch"
 }

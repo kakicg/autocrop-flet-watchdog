@@ -138,11 +138,8 @@ class SideBar(ft.Container):
             self.set_processed_dir_setting_visible(False)
             self.set_barcode_field_visible(True)
             page.update()
-        def update_watch_dir(event):
-            set_WATCH_DIR(watch_dir_field.value)
-            page.snack_bar = ft.SnackBar(ft.Text("監視フォルダを更新しました。再起動が必要です。"))
-            page.snack_bar.open = True
-            self.set_watch_dir_setting_visible(False)
+        def cancel_processed_dir_setting(event):
+            self.set_processed_dir_setting_visible(False)
             self.set_barcode_field_visible(True)
             page.update()
         def processed_dir_pick_result(e):
@@ -153,23 +150,46 @@ class SideBar(ft.Container):
         page.overlay.append(processed_dir_picker)
         processed_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: processed_dir_picker.get_directory_path())
         processed_dir_button = ft.ElevatedButton("更新", on_click=update_processed_dir)
-        processed_dir_row = ft.Row([processed_dir_field, processed_dir_pick_button, processed_dir_button], alignment=ft.MainAxisAlignment.START, visible=False)
+        processed_dir_cancel_button = ft.ElevatedButton("キャンセル", on_click=cancel_processed_dir_setting)
+        processed_dir_row = ft.Column([
+            processed_dir_field,
+            ft.Row([
+                processed_dir_pick_button, processed_dir_button, processed_dir_cancel_button
+            ], alignment=ft.MainAxisAlignment.START, spacing=5)
+        ], spacing=5, visible=False)
         def watch_dir_pick_result(e):
             if e.path:
                 watch_dir_field.value = e.path
                 watch_dir_field.update()
+        def update_watch_dir(event):
+            set_WATCH_DIR(watch_dir_field.value)
+            page.snack_bar = ft.SnackBar(ft.Text("監視フォルダを更新しました。再起動が必要です。"))
+            page.snack_bar.open = True
+            self.set_watch_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        def cancel_watch_dir_setting(event):
+            self.set_watch_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
         watch_dir_picker = ft.FilePicker(on_result=watch_dir_pick_result)
         page.overlay.append(watch_dir_picker)
         watch_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: watch_dir_picker.get_directory_path())
         watch_dir_button = ft.ElevatedButton("更新", on_click=update_watch_dir)
-        watch_dir_row = ft.Row([watch_dir_field, watch_dir_pick_button, watch_dir_button], alignment=ft.MainAxisAlignment.START, visible=False)
+        watch_dir_cancel_button = ft.ElevatedButton("キャンセル", on_click=cancel_watch_dir_setting)
+        watch_dir_row = ft.Column([
+            watch_dir_field,
+            ft.Row([
+                watch_dir_pick_button, watch_dir_button, watch_dir_cancel_button
+            ], alignment=ft.MainAxisAlignment.START, spacing=5)
+        ], spacing=5, visible=False)
         dir_settings_column = ft.Column([
             processed_dir_row,
             watch_dir_row,
         ], spacing=5)
         
         self.content = ft.Column(
-            controls=[foot_container, real_height_textfield, top_message_container, middle_container, dir_settings_column],
+            controls=[foot_container, dir_settings_column, real_height_textfield, top_message_container, middle_container],
             spacing=10,
             expand=True
         )
