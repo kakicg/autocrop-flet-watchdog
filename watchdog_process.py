@@ -33,6 +33,8 @@ class ImageHandler(FileSystemEventHandler):
         barcode_whole = self.page.session.get('barcode_whole')
         if barcode_number:
             new_name = f"{barcode_number}.jpg"
+            self.page.session.set('barcode_number', None)
+            self.page.session.set('barcode_whole', None)
             # --- SideBarのmiddle_listsを更新 ---
             if hasattr(self.page, 'side_bar'):
                 for container in self.page.side_bar.middle_lists:
@@ -42,8 +44,10 @@ class ImageHandler(FileSystemEventHandler):
                             container.bgcolor = "#3DBCE2"
                             content.color = "white"
                             break
+            self.page.side_bar.top_message_text.value = f"{barcode_number}の撮影完了"
         else:
             new_name = os.path.basename(image_path)
+            self.page.side_bar.top_message_text.value = f"{new_name}に対応するバーコードが未入力"
 
         real_height = self.page.session.get('real_height')
         top_y, processed_path = process_image(image_path, new_name)

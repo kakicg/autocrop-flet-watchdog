@@ -4,6 +4,14 @@ from watchdog_process import start_watchdog
 import optparse
 import os
 import asyncio
+import sys
+
+if sys.stdout is None:
+    import io
+    sys.stdout = io.StringIO()
+if sys.stderr is None:
+    import io
+    sys.stderr = io.StringIO()
 
 def main(page: ft.Page):
     directory_settings_mode = {"active": False}  # Use dict for mutability in closures
@@ -71,8 +79,8 @@ def main(page: ft.Page):
             ft.PopupMenuButton(
                 items=[
                     ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
-                    ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
                     ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
+                    ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]
@@ -113,8 +121,5 @@ def main(page: ft.Page):
 
 # Fletアプリケーションを実行
 if __name__ == "__main__":
-    ft.app(
-        target=main,
-        view=None,
-    )
+   ft.app(target=main, view=ft.FLET_APP)
     

@@ -13,3 +13,8 @@ processed/
 watch/
 watch_folder/
 .pytest_cache/
+build/
+dist/
+*.spec
+*.pkg
+*.exe

@@ -47,13 +47,6 @@ class SideBar(ft.Container):
             self.real_height_textfield.visible = False
             self.top_message_text.value = f"{step}件目の商品の撮影を行ってください"
             page.update()
-
-        def next_item(event):
-            page.session.set("barcode_number", "")
-            barcode_textfield.visible = True
-            top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
-            top_message_container.content.value = 'バーコードを読み取ってください'
-            page.update()
         
         def force_focus(evet):
             barcode_textfield.focus()
