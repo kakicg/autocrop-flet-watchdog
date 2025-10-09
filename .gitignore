@@ -18,3 +18,6 @@ dist/
 *.spec
 *.pkg
 *.exe
+product_data.db
+__pycache__/
+settings.json
