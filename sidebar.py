@@ -14,9 +14,23 @@ class SideBar(ft.Container):
             # barcode_wholeとしてセット
             barcode_whole = event.control.value
             page.session.set("barcode_whole", barcode_whole)
-            # 数字以外を除去し、先頭6文字をbarcode_numberとしてセット
+            # 正規表現を使用して数字以外を除去し、先頭6文字をbarcode_numberとしてセット
             import re
             barcode_number = re.sub(r'\D', '', barcode_whole)[:6]
+            print(f"barcode_number: {barcode_number}")
+            # 既存のバーコードリストを取得（なければ空リスト）
+            barcode_list = page.session.get("barcode_list") or []
+            # 重複チェック
+            if barcode_number in barcode_list:
+                # 重複: メッセージ表示して処理中断
+                top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
+                top_message_container.content.value = f'[ {barcode_number} ] は既に登録済みです'
+                event.control.value = ""
+                page.update()
+                return
+            # 重複でない: 追加してセッション更新
+            barcode_list.append(barcode_number)
+            page.session.set("barcode_list", barcode_list)
             page.session.set("barcode_number", barcode_number)
             event.control.value = ""
             

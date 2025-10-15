@@ -65,6 +65,8 @@ def main(page: ft.Page):
     
     # デフォルトモードを設定
     page.session.set("mode", "barcode_mode")
+    # バーコード履歴リストを初期化
+    page.session.set("barcode_list", [])
     mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
