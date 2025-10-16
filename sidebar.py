@@ -22,14 +22,34 @@ class SideBar(ft.Container):
             barcode_list = page.session.get("barcode_list") or []
             # 重複チェック
             if barcode_number in barcode_list:
-                # 重複: メッセージ表示して処理中断
+                # 重複: メッセージ表示
                 top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
                 top_message_container.content.value = f'[ {barcode_number} ] は既に登録済みです'
                 event.control.value = ""
+                # GridViewから同バーコードの画像カードを削除（ファイル名は {barcode_number}.jpg）
+                try:
+                    grid_view = page.main_view
+                    targets = []
+                    filename = f"{barcode_number}.jpg"
+                    for idx, ctrl in enumerate(list(grid_view.controls)):
+                        if isinstance(ctrl, ft.Container) and hasattr(ctrl, 'content') and isinstance(ctrl.content, ft.Column):
+                            for child in getattr(ctrl.content, 'controls', []):
+                                if isinstance(child, ft.Text) and child.value == filename:
+                                    targets.append(idx)
+                                    break
+                    for idx in reversed(targets):
+                        del grid_view.controls[idx]
+                    if targets:
+                        grid_view.update()
+                except Exception as e:
+                    print(f"Error removing duplicated barcode card: {e}")
                 page.update()
-                return
+            else:
+                barcode_list.append(barcode_number)
+
+                
             # 重複でない: 追加してセッション更新
-            barcode_list.append(barcode_number)
+            
             page.session.set("barcode_list", barcode_list)
             page.session.set("barcode_number", barcode_number)
             event.control.value = ""
