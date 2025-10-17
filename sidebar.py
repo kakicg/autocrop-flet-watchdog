@@ -22,6 +22,8 @@ class SideBar(ft.Container):
             barcode_list = page.session.get("barcode_list") or []
             # 重複チェック
             if barcode_number in barcode_list:
+                print(f"barcode_number is already in the list: {barcode_number}")
+
                 # 重複: メッセージ表示
                 top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
                 top_message_container.content.value = f'[ {barcode_number} ] は既に登録済みです'
@@ -30,11 +32,10 @@ class SideBar(ft.Container):
                 try:
                     grid_view = page.main_view
                     targets = []
-                    filename = f"{barcode_number}.jpg"
                     for idx, ctrl in enumerate(list(grid_view.controls)):
                         if isinstance(ctrl, ft.Container) and hasattr(ctrl, 'content') and isinstance(ctrl.content, ft.Column):
                             for child in getattr(ctrl.content, 'controls', []):
-                                if isinstance(child, ft.Text) and child.value == filename:
+                                if isinstance(child, ft.Text) and child.value == barcode_number:
                                     targets.append(idx)
                                     break
                     for idx in reversed(targets):
@@ -61,6 +62,7 @@ class SideBar(ft.Container):
                 ft.Container(
                     content=ft.Text(current_barcode_number, 
                                 color="black",
+                                size=24,
                             ),
                     bgcolor="#ffffe0",
                     expand=True,

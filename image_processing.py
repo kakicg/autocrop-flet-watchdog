@@ -5,9 +5,8 @@ from config import get_PROCESSED_DIR, get_A, get_B
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
-def process_image(original_image_path, filename):
+def process_image(original_image_path, filename, preview_name):
     # 元のファイル名を抽出
-    original_image_filename = os.path.basename(original_image_path)
     
     image = cv2.imread(original_image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -77,10 +76,12 @@ def process_image(original_image_path, filename):
     # previewフォルダに同じ画像を保存
     preview_dir = "preview"
     os.makedirs(preview_dir, exist_ok=True)  # previewフォルダを作成（なければ作成）
-    preview_file_path = os.path.join(preview_dir, original_image_filename)
+    preview_file_path = os.path.join(preview_dir, preview_name)
     cv2.imwrite(preview_file_path, cropped_image)
     print(f"プレビュー画像が '{preview_file_path}' として保存されました。")
     
     estimated_height = top_y * get_A() + get_B()
-    return top_y, output_file_path, preview_file_path
+    # 5刻みの整数に丸める
+    estimated_height = round(estimated_height / 5) * 5
+    return top_y, estimated_height, output_file_path, preview_file_path
 

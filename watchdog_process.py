@@ -31,8 +31,9 @@ class ImageHandler(FileSystemEventHandler):
         current_mode = self.page.session.get('mode')
         barcode_number = self.page.session.get('barcode_number')
         barcode_whole = self.page.session.get('barcode_whole')
+        preview_name = os.path.basename(image_path)
         if barcode_number:
-            new_name = f"{barcode_number}.jpg"
+            processed_name = f"{barcode_number}.jpg"
             self.page.session.set('barcode_number', None)
             self.page.session.set('barcode_whole', None)
             # --- SideBarのmiddle_listsを更新 ---
@@ -46,12 +47,30 @@ class ImageHandler(FileSystemEventHandler):
                             break
             self.page.side_bar.top_message_text.value = f"{barcode_number}の撮影完了"
         else:
-            new_name = os.path.basename(image_path)
-            self.page.side_bar.top_message_text.value = f"{new_name}に対応するバーコードが未入力"
+            processed_name = preview_name
+            self.page.side_bar.top_message_text.value = f"{preview_name}に対応するバーコードが未入力"
+            # --- SideBarのmiddle_listsに未入力の表示を追加（赤地・白文字） ---
+            if hasattr(self.page, 'side_bar') and hasattr(self.page.side_bar, 'middle_lists'):
+                try:
+                    self.page.side_bar.middle_lists.insert(
+                        0,
+                        ft.Container(
+                            content=ft.Text(
+                                "バーコード未入力",
+                                color=ft.Colors.WHITE,
+                            ),
+                            bgcolor=ft.Colors.RED,
+                            expand=True,
+                            margin=8,
+                            padding=8,
+                        ),
+                    )
+                    self.page.update()
+                except Exception as e:
+                    print(f"Error adding 'バーコード未入力' to sidebar: {e}")
 
         real_height = self.page.session.get('real_height')
-        top_y, processed_path = process_image(image_path, new_name)
-        estimated_height = top_y * get_A() + get_B()
+        top_y, estimated_height, processed_path, preview_path = process_image(image_path, processed_name, preview_name)
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
             barcode_whole=barcode_whole if barcode_whole else None,
@@ -79,6 +98,7 @@ class ImageHandler(FileSystemEventHandler):
 
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
+        abs_preview_path = os.path.abspath(preview_path)
 
         # オリジナル画像を削除
         try:
@@ -89,26 +109,30 @@ class ImageHandler(FileSystemEventHandler):
         # 現在のタイムスタンプを取得
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
+        # ラベル表示用のテキストと色（バーコード未入力時は赤字）
+        label_text = barcode_number if barcode_number else "バーコード未入力"
+        label_color = ft.Colors.WHITE if barcode_number else ft.Colors.RED
+        
         # 新しい画像コンテナを作成
         image_container = ft.Container(
             content=ft.Column(
                 [
                     ft.Image(
-                        src=abs_processed_path,
+                        src=abs_preview_path,
                         fit=ft.ImageFit.CONTAIN,
                         repeat=ft.ImageRepeat.NO_REPEAT,
-                        height=200,  # 画像高さを200に
+                        height=300,  # 1.5倍に拡大
                     ),
                     ft.Text(
-                        f"{new_name}",
-                        size=12,
-                        color=ft.Colors.WHITE,
+                        f"{label_text}",
+                        size=18,  # 1.5倍に拡大
+                        color=label_color,
                         weight=ft.FontWeight.W_600,
                     ),
                     ft.Text(
                         f"推定高さ:{estimated_height}",
                         style=text_style,
-                        size=12,
+                        size=18,  # 1.5倍に拡大
                         color=ft.Colors.WHITE,
                         weight=ft.FontWeight.W_100,
                     ),
@@ -126,7 +150,7 @@ class ImageHandler(FileSystemEventHandler):
             bgcolor=ft.Colors.BLUE_GREY_900,
             border_radius=10,
             margin=5,
-            height=300,  # コンテナの高さをさらに大きく
+            height=450,
         )
 
         try:

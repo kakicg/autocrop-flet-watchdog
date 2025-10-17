@@ -100,7 +100,7 @@ def main(page: ft.Page):
     main_view = ft.GridView(
         expand=1,
         runs_count=5,
-        max_extent=150,
+        max_extent=225,  # 1.5倍に拡大
         child_aspect_ratio=0.45,
         spacing=5,
         run_spacing=5,
