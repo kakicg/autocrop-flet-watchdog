@@ -70,7 +70,17 @@ class ImageHandler(FileSystemEventHandler):
                     print(f"Error adding 'バーコード未入力' to sidebar: {e}")
 
         real_height = self.page.session.get('real_height')
-        top_y, estimated_height, processed_path, preview_path = process_image(image_path, processed_name, preview_name)
+        session_processed_dir = self.page.session.get('processed_dir')
+
+        processed_dir = self.page.session.get("processed_dir")
+        os.makedirs(processed_dir, exist_ok=True)  # 保存先フォルダを作成
+        output_file_path = os.path.join(processed_dir, processed_name)
+
+        top_y, estimated_height, processed_path, preview_path = process_image(
+            image_path, 
+            output_file_path, 
+            preview_name
+        )
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
             barcode_whole=barcode_whole if barcode_whole else None,

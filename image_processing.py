@@ -5,7 +5,7 @@ from config import get_PROCESSED_DIR, get_A, get_B
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
-def process_image(original_image_path, filename, preview_name):
+def process_image(original_image_path, processed_file_path, preview_name):
     # 元のファイル名を抽出
     
     image = cv2.imread(original_image_path)
@@ -67,11 +67,8 @@ def process_image(original_image_path, filename, preview_name):
     cropped_image = image[y1:y2, x1:x2]
 
     # 結果をファイルとして保存する
-    processed_dir = get_PROCESSED_DIR()
-    os.makedirs(processed_dir, exist_ok=True)  # 保存先フォルダを作成
-    output_file_path = os.path.join(processed_dir, filename)
-    cv2.imwrite(output_file_path, cropped_image)
-    print(f"画像が '{output_file_path}' として保存されました。")
+    cv2.imwrite(processed_file_path, cropped_image)
+    print(f"画像が '{processed_file_path}' として保存されました。")
     
     # previewフォルダに同じ画像を保存
     preview_dir = "preview"
@@ -83,5 +80,5 @@ def process_image(original_image_path, filename, preview_name):
     estimated_height = top_y * get_A() + get_B()
     # 5刻みの整数に丸める
     estimated_height = round(estimated_height / 5) * 5
-    return top_y, estimated_height, output_file_path, preview_file_path
+    return top_y, estimated_height, processed_file_path, preview_file_path
 

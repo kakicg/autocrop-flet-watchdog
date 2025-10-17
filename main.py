@@ -5,6 +5,7 @@ import optparse
 import os
 import asyncio
 import sys
+from config import get_PROCESSED_DIR
 
 if sys.stdout is None:
     import io
@@ -67,6 +68,8 @@ def main(page: ft.Page):
     page.session.set("mode", "barcode_mode")
     # バーコード履歴リストを初期化
     page.session.set("barcode_list", [])
+    # processed_dir をセッションに保持
+    page.session.set("processed_dir", get_PROCESSED_DIR())
     mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
