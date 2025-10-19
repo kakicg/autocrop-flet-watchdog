@@ -109,7 +109,7 @@ class ImageHandler(FileSystemEventHandler):
             file_exists = os.path.exists(csv_file_path)
             
             with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['barcode_whole', 'estimated_height', 'timestamp']
+                fieldnames = ['バーコード', '高さ', '時刻']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 
                 # ファイルが新規作成の場合はヘッダーを書き込み
@@ -118,9 +118,9 @@ class ImageHandler(FileSystemEventHandler):
                 
                 # データを書き込み
                 writer.writerow({
-                    'barcode_whole': barcode_whole if barcode_whole else 'unknown',
-                    'estimated_height': estimated_height,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    'バーコード': barcode_whole if barcode_whole else 'unknown',
+                    '高さ': estimated_height,
+                    '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 })
             
             print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
