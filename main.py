@@ -70,6 +70,33 @@ def main(page: ft.Page):
     page.session.set("barcode_list", [])
     # processed_dir をセッションに保持
     page.session.set("processed_dir", get_PROCESSED_DIR())
+    
+    # day.txtから先頭8文字を読み取り、root_folderを作成・設定
+    processed_dir = get_PROCESSED_DIR()
+    day_txt_path = os.path.join(processed_dir, "day.txt")
+    root_folder_name = ""
+    
+    try:
+        if os.path.exists(day_txt_path):
+            with open(day_txt_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                root_folder_name = content[:8]  # 先頭8文字
+        else:
+            # day.txtが存在しない場合は現在の日付を使用
+            from datetime import datetime
+            root_folder_name = datetime.now().strftime("%Y%m%d")
+    except Exception as e:
+        print(f"Error reading day.txt: {e}")
+        # エラー時は現在の日付を使用
+        from datetime import datetime
+        root_folder_name = datetime.now().strftime("%Y%m%d")
+    
+    # root_folderを作成
+    root_folder_path = os.path.join(processed_dir, root_folder_name)
+    os.makedirs(root_folder_path, exist_ok=True)
+    
+    # page.sessionに設定
+    page.session.set("root_folder_path", root_folder_path)
     mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(

@@ -13,11 +13,22 @@ class SideBar(ft.Container):
         def set_item(event):
             # barcode_wholeとしてセット
             barcode_whole = event.control.value
+            
+            # barcode_wholeの長さが5未満の場合、ランダムな40桁の数字を生成
+            if len(barcode_whole) < 5:
+                import random
+                barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])
+            
             page.session.set("barcode_whole", barcode_whole)
-            # 正規表現を使用して数字以外を除去し、先頭6文字をbarcode_numberとしてセット
+            # barcode_numberの設定ロジック
             import re
-            barcode_number = re.sub(r'\D', '', barcode_whole)[:6]
+            cleaned_barcode = re.sub(r'\D', '', barcode_whole)
+            if len(cleaned_barcode) < 38:
+                barcode_number = cleaned_barcode[:5]
+            else:
+                barcode_number = cleaned_barcode[33:38]  # 34文字目から5文字
             print(f"barcode_number: {barcode_number}")
+            print(f"barcode_whole: {barcode_whole}")
             # 既存のバーコードリストを取得（なければ空リスト）
             barcode_list = page.session.get("barcode_list") or []
             # 重複チェック

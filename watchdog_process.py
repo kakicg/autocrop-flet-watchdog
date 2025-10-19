@@ -7,6 +7,7 @@ from item_db import ItemInfo, session
 import time
 from datetime import datetime
 from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B
+import csv
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
@@ -72,9 +73,18 @@ class ImageHandler(FileSystemEventHandler):
         real_height = self.page.session.get('real_height')
         session_processed_dir = self.page.session.get('processed_dir')
 
-        processed_dir = self.page.session.get("processed_dir")
-        os.makedirs(processed_dir, exist_ok=True)  # 保存先フォルダを作成
-        output_file_path = os.path.join(processed_dir, processed_name)
+        root_folder_path = self.page.session.get("root_folder_path")
+        
+        # barcode_numberの先頭2文字のフォルダを作成
+        if barcode_number and len(barcode_number) >= 2:
+            barcode_prefix = barcode_number[:2]
+        else:
+            barcode_prefix = "00"  # フォールバック
+        
+        barcode_folder_path = os.path.join(root_folder_path, barcode_prefix)
+        os.makedirs(barcode_folder_path, exist_ok=True)  # バーコード先頭2文字フォルダを作成
+        
+        output_file_path = os.path.join(barcode_folder_path, processed_name)
 
         top_y, estimated_height, processed_path, preview_path = process_image(
             image_path, 
@@ -86,12 +96,36 @@ class ImageHandler(FileSystemEventHandler):
             barcode_whole=barcode_whole if barcode_whole else None,
             precessed_url=processed_path,
             original_url=image_path,
-            height=float(estimated_height),
+            height=int(estimated_height),
             top_y=int(top_y) if top_y is not None else None,
             real_height=int(real_height) if real_height is not None else None
         )
         session.add(new_item)
         session.commit()
+
+        # CSVファイルに商品データを書き込み（barcode_numberごとに個別ファイル）
+        try:
+            csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
+            file_exists = os.path.exists(csv_file_path)
+            
+            with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+                fieldnames = ['barcode_whole', 'estimated_height', 'timestamp']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                
+                # ファイルが新規作成の場合はヘッダーを書き込み
+                if not file_exists:
+                    writer.writeheader()
+                
+                # データを書き込み
+                writer.writerow({
+                    'barcode_whole': barcode_whole if barcode_whole else 'unknown',
+                    'estimated_height': estimated_height,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+            
+            print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
+        except Exception as e:
+            print(f"CSV書き込みエラー: {e}")
 
         if real_height:
             # 直近のtop_y, real_heightペアを2つ取得
@@ -140,11 +174,18 @@ class ImageHandler(FileSystemEventHandler):
                         weight=ft.FontWeight.W_600,
                     ),
                     ft.Text(
+                        f"{preview_name}",
+                        style=text_style,
+                        size=18,
+                        color=ft.Colors.WHITE,
+                        weight=ft.FontWeight.W_600,
+                    ),
+                    ft.Text(
                         f"推定高さ:{estimated_height}",
                         style=text_style,
                         size=18,  # 1.5倍に拡大
                         color=ft.Colors.WHITE,
-                        weight=ft.FontWeight.W_100,
+                        weight=ft.FontWeight.W_600,
                     ),
                     ft.Text(
                         f"[ {current_time} ]",
