@@ -79,7 +79,7 @@ class ImageHandler(FileSystemEventHandler):
         if barcode_number and len(barcode_number) >= 2:
             barcode_prefix = barcode_number[:2]
         else:
-            barcode_prefix = "00"  # フォールバック
+            barcode_prefix = "XX"  # フォールバック
         
         barcode_folder_path = os.path.join(root_folder_path, barcode_prefix)
         os.makedirs(barcode_folder_path, exist_ok=True)  # バーコード先頭2文字フォルダを作成
@@ -103,29 +103,30 @@ class ImageHandler(FileSystemEventHandler):
         session.add(new_item)
         session.commit()
 
-        # CSVファイルに商品データを書き込み（barcode_numberごとに個別ファイル）
-        try:
-            csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
-            file_exists = os.path.exists(csv_file_path)
-            
-            with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['バーコード', '高さ', '時刻']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        # CSVファイルに商品データを書き込み（barcode_numberがある場合のみ）
+        if barcode_number:
+            try:
+                csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
+                file_exists = os.path.exists(csv_file_path)
                 
-                # ファイルが新規作成の場合はヘッダーを書き込み
-                if not file_exists:
-                    writer.writeheader()
+                with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+                    fieldnames = ['バーコード', '高さ', '時刻']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    
+                    # ファイルが新規作成の場合はヘッダーを書き込み
+                    if not file_exists:
+                        writer.writeheader()
+                    
+                    # データを書き込み
+                    writer.writerow({
+                        'バーコード': barcode_whole if barcode_whole else 'unknown',
+                        '高さ': estimated_height,
+                        '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
                 
-                # データを書き込み
-                writer.writerow({
-                    'バーコード': barcode_whole if barcode_whole else 'unknown',
-                    '高さ': estimated_height,
-                    '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-            
-            print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
-        except Exception as e:
-            print(f"CSV書き込みエラー: {e}")
+                print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
+            except Exception as e:
+                print(f"CSV書き込みエラー: {e}")
 
         if real_height:
             # 直近のtop_y, real_heightペアを2つ取得
