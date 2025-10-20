@@ -200,8 +200,9 @@ class ImageHandler(FileSystemEventHandler):
                     # メッセージを元に戻す
                     self.page.side_bar.top_message_text.value = "バーコード自動入力"
                     
-                    # バーコード入力フィールドを非表示
-                    self.page.side_bar.barcode_textfield.visible = False
+                    # バーコード入力フィールドを表示（通常モード継続可能に）
+                    self.page.side_bar.barcode_textfield.visible = True
+                    self.page.side_bar.barcode_textfield.focus()
                     self.page.update()
         
         # 新しい画像コンテナを作成

@@ -65,6 +65,13 @@ def process_image(original_image_path, processed_file_path, preview_name):
 
     # 画像をトリミング
     cropped_image = image[y1:y2, x1:x2]
+    
+    # 縦ピクセルサイズを1280にリサイズ（軽量化）
+    height, width = cropped_image.shape[:2]
+    if height > 1280:
+        # アスペクト比を保持してリサイズ
+        new_width = int(width * 1280 / height)
+        cropped_image = cv2.resize(cropped_image, (new_width, 1280), interpolation=cv2.INTER_AREA)
 
     # 結果をファイルとして保存する
     cv2.imwrite(processed_file_path, cropped_image)
