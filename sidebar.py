@@ -2,8 +2,12 @@ import flet as ft
 import time
 import random
 import colorsys
+import os
+import csv
 from sqlalchemy.orm import declarative_base
 from config import set_PROCESSED_DIR, set_WATCH_DIR, get_PROCESSED_DIR, get_WATCH_DIR
+from item_db import ItemInfo, session
+from datetime import datetime
 
 
 class SideBar(ft.Container):
@@ -20,6 +24,28 @@ class SideBar(ft.Container):
                 barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])
             
             page.session.set("barcode_whole", barcode_whole)
+            
+            # 再処理モードの場合
+            pending_image_data = page.session.get('pending_image_data')
+            if pending_image_data:
+                # 再処理を実行
+                reprocess_image_with_barcode(page, pending_image_data, barcode_whole)
+                # モードをリセット
+                page.session.set('pending_mode', False)
+                page.session.set('pending_image_data', None)
+                # コンテナのボーダーを削除
+                container = pending_image_data['container']
+                container.border = None
+                container.update()
+                
+                # メッセージを更新
+                page.side_bar.top_message_text.value = f"{barcode_number}の再処理が完了しました"
+                page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
+                
+                # テキストフィールドをクリア
+                event.control.value = ""
+                event.control.update()
+                return
             # barcode_numberの設定ロジック
             import re
             cleaned_barcode = re.sub(r'\D', '', barcode_whole)
@@ -252,4 +278,91 @@ class SideBar(ft.Container):
     def set_watch_dir_setting_visible(self, visible: bool):
         self.watch_dir_row.visible = visible
         self.watch_dir_row.update()
+
+def reprocess_image_with_barcode(page, image_data, barcode_whole):
+    """バーコード未入力画像の再処理"""
+    try:
+        # barcode_numberを計算
+        import re
+        cleaned_barcode = re.sub(r'\D', '', barcode_whole)
+        if len(cleaned_barcode) < 38:
+            barcode_number = cleaned_barcode[:5]
+        else:
+            barcode_number = cleaned_barcode[33:38]
+        
+        # ファイルパスを再構築
+        root_folder_path = page.session.get("root_folder_path")
+        barcode_prefix = barcode_number[:2] if len(barcode_number) >= 2 else "XX"
+        barcode_folder_path = os.path.join(root_folder_path, barcode_prefix)
+        os.makedirs(barcode_folder_path, exist_ok=True)
+        
+        # 新しいファイルパス
+        new_processed_name = f"{barcode_number}.jpg"
+        new_processed_path = os.path.join(barcode_folder_path, new_processed_name)
+        
+        # ファイルを移動
+        import shutil
+        shutil.move(image_data['processed_path'], new_processed_path)
+        
+        # CSVファイルに書き込み
+        csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
+        file_exists = os.path.exists(csv_file_path)
+        
+        with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['バーコード', '高さ', '時刻']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            if not file_exists:
+                writer.writeheader()
+            
+            writer.writerow({
+                'バーコード': barcode_whole,
+                '高さ': image_data['estimated_height'],
+                '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+        
+        # データベースを更新
+        new_item = ItemInfo(
+            barcode=barcode_number,
+            barcode_whole=barcode_whole,
+            precessed_url=new_processed_path,
+            original_url=image_data['image_path'],
+            height=int(image_data['estimated_height']),
+            top_y=None,
+            real_height=None
+        )
+        session.add(new_item)
+        session.commit()
+        
+        # GridViewコンテナの表示を更新
+        container = image_data['container']
+        # テキストを正常なバーコード表示に変更
+        for child in container.content.controls:
+            if isinstance(child, ft.Text) and child.color == ft.Colors.RED:
+                child.value = barcode_number
+                child.color = ft.Colors.WHITE
+                break
+        
+        # サイドバーにバーコード番号を追加
+        page.side_bar.middle_lists.insert(0, 
+            ft.Container(
+                content=ft.Text(barcode_number, 
+                            color="black",
+                            size=24,
+                        ),
+                bgcolor="#3DBCE2",
+                expand=True,
+                margin=8,
+                padding=8
+            ),
+        )
+        
+        # UI更新
+        container.update()
+        page.update()
+        
+        print(f"再処理完了: {barcode_number}")
+        
+    except Exception as e:
+        print(f"再処理エラー: {e}")
 

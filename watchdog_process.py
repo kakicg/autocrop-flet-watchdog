@@ -57,7 +57,7 @@ class ImageHandler(FileSystemEventHandler):
                         0,
                         ft.Container(
                             content=ft.Text(
-                                "バーコード未入力",
+                                f"バーコード未入力（{preview_name}）",
                                 color=ft.Colors.WHITE,
                             ),
                             bgcolor=ft.Colors.RED,
@@ -155,8 +155,56 @@ class ImageHandler(FileSystemEventHandler):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # ラベル表示用のテキストと色（バーコード未入力時は赤字）
-        label_text = barcode_number if barcode_number else "バーコード未入力"
+        label_text = barcode_number if barcode_number else f"バーコード未入力（{preview_name}）"
         label_color = ft.Colors.WHITE if barcode_number else ft.Colors.RED
+        
+        # クリックハンドラーを定義
+        def on_image_container_click(event):
+            if not barcode_number:  # バーコード未入力の場合のみ
+                current_mode = self.page.session.get('pending_mode') or False
+                
+                if not current_mode:
+                    # バーコード入力モードに切り替え
+                    self.page.session.set('pending_mode', True)
+                    # 対象画像データを保存
+                    image_data = {
+                        'image_path': image_path,
+                        'processed_path': processed_path,
+                        'preview_path': preview_path,
+                        'estimated_height': estimated_height,
+                        'preview_name': preview_name,
+                        'container': image_container
+                    }
+                    self.page.session.set('pending_image_data', image_data)
+                    
+                    # クリックされたコンテナにボーダーを追加
+                    image_container.border = ft.border.all(3, ft.Colors.RED)
+                    image_container.update()
+                    
+                    # メッセージを更新
+                    self.page.side_bar.top_message_text.value = f"バーコード入力モード: {preview_name}のバーコードを入力してください"
+                    self.page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
+                    
+                    # バーコード入力フィールドを表示・フォーカス
+                    self.page.side_bar.barcode_textfield.visible = True
+                    self.page.side_bar.barcode_textfield.focus()
+                    self.page.update()
+                else:
+                    # キャンセルモード
+                    self.page.session.set('pending_mode', False)
+                    self.page.session.set('pending_image_data', None)
+                    
+                    # クリックされたコンテナのボーダーを削除
+                    image_container.border = None
+                    image_container.update()
+                    
+                    # メッセージを元に戻す
+                    self.page.side_bar.top_message_text.value = "バーコード自動入力"
+                    self.page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
+                    
+                    # バーコード入力フィールドを非表示
+                    self.page.side_bar.barcode_textfield.visible = False
+                    self.page.update()
         
         # 新しい画像コンテナを作成
         image_container = ft.Container(
@@ -203,6 +251,7 @@ class ImageHandler(FileSystemEventHandler):
             border_radius=10,
             margin=5,
             height=450,
+            on_click=on_image_container_click if not barcode_number else None,  # バーコード未入力の場合のみクリック可能
         )
 
         try:
