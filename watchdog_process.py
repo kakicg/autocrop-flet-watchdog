@@ -155,7 +155,7 @@ class ImageHandler(FileSystemEventHandler):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # ラベル表示用のテキストと色（バーコード未入力時は赤字）
-        label_text = barcode_number if barcode_number else f"バーコード未入力（{preview_name}）"
+        label_text = barcode_number if barcode_number else f"バーコード未入力"
         label_color = ft.Colors.WHITE if barcode_number else ft.Colors.RED
         
         # クリックハンドラーを定義

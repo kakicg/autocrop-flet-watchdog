@@ -354,7 +354,7 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
         page.side_bar.middle_lists.insert(0, 
             ft.Container(
                 content=ft.Text(barcode_number, 
-                            color="black",
+                            color="white",
                             size=24,
                         ),
                 bgcolor="#3DBCE2",
