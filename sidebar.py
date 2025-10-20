@@ -28,6 +28,14 @@ class SideBar(ft.Container):
             # 再処理モードの場合
             pending_image_data = page.session.get('pending_image_data')
             if pending_image_data:
+                # barcode_numberを計算
+                import re
+                cleaned_barcode = re.sub(r'\D', '', barcode_whole)
+                if len(cleaned_barcode) < 38:
+                    barcode_number = cleaned_barcode[:5]
+                else:
+                    barcode_number = cleaned_barcode[33:38]
+                
                 # 再処理を実行
                 reprocess_image_with_barcode(page, pending_image_data, barcode_whole)
                 # モードをリセット
@@ -38,9 +46,8 @@ class SideBar(ft.Container):
                 container.border = None
                 container.update()
                 
-                # メッセージを更新
-                page.side_bar.top_message_text.value = f"{barcode_number}の再処理が完了しました"
-                page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
+                # メッセージを通常モードに戻す
+                page.side_bar.top_message_text.value = "バーコード自動入力"
                 
                 # テキストフィールドをクリア
                 event.control.value = ""
@@ -356,6 +363,19 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
                 padding=8
             ),
         )
+        
+        # サイドバーから「バーコード未入力」の表示を削除
+        preview_name = image_data['preview_name']
+        targets_to_remove = []
+        for idx, container in enumerate(page.side_bar.middle_lists):
+            if isinstance(container, ft.Container) and hasattr(container, 'content'):
+                content = container.content
+                if isinstance(content, ft.Text) and f"バーコード未入力（{preview_name}）" in content.value:
+                    targets_to_remove.append(idx)
+        
+        # 後ろから削除（インデックスがずれないように）
+        for idx in reversed(targets_to_remove):
+            del page.side_bar.middle_lists[idx]
         
         # UI更新
         container.update()

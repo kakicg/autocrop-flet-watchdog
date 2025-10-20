@@ -183,7 +183,6 @@ class ImageHandler(FileSystemEventHandler):
                     
                     # メッセージを更新
                     self.page.side_bar.top_message_text.value = f"バーコード入力モード: {preview_name}のバーコードを入力してください"
-                    self.page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
                     
                     # バーコード入力フィールドを表示・フォーカス
                     self.page.side_bar.barcode_textfield.visible = True
@@ -200,7 +199,6 @@ class ImageHandler(FileSystemEventHandler):
                     
                     # メッセージを元に戻す
                     self.page.side_bar.top_message_text.value = "バーコード自動入力"
-                    self.page.side_bar.top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
                     
                     # バーコード入力フィールドを非表示
                     self.page.side_bar.barcode_textfield.visible = False
