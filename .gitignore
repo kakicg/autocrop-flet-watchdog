@@ -10,6 +10,7 @@ _sub/
 tests/
 processed_images/
 processed/
+preview/
 watch/
 watch_folder/
 .pytest_cache/

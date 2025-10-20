@@ -5,7 +5,9 @@ import optparse
 import os
 import asyncio
 import sys
+import time
 from config import get_PROCESSED_DIR
+from version import VERSION
 
 if sys.stdout is None:
     import io
@@ -60,7 +62,7 @@ def main(page: ft.Page):
         page.side_bar.top_message_text.value = "監視フォルダ設定モードです。設定後は再起動してください。"
         page.update()
 
-    page.title = "Auto Crop App"
+    page.title = f"Auto Crop App v{VERSION}"
     page.theme_mode = ft.ThemeMode.DARK
     page.window.maximized = True
     
@@ -97,12 +99,30 @@ def main(page: ft.Page):
     
     # page.sessionに設定
     page.session.set("root_folder_path", root_folder_path)
+    
+    # previewフォルダ内の10日以上前のファイルを削除
+    try:
+        preview_dir = "preview"
+        if os.path.exists(preview_dir):
+            current_time = time.time()
+            ten_days_ago = current_time - (10 * 24 * 60 * 60)  # 10日前のタイムスタンプ
+            
+            for filename in os.listdir(preview_dir):
+                file_path = os.path.join(preview_dir, filename)
+                if os.path.isfile(file_path):
+                    file_mtime = os.path.getmtime(file_path)
+                    if file_mtime < ten_days_ago:
+                        os.remove(file_path)
+                        print(f"古いファイルを削除: {file_path}")
+    except Exception as e:
+        print(f"previewフォルダのクリーンアップエラー: {e}")
+    
     mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
         leading_width=40,
-        title=ft.Text("商品撮影システム", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
+        title=ft.Text(f"商品撮影システム v{VERSION}", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP")),
         center_title=False,
         bgcolor=ft.Colors.ON_SURFACE_VARIANT,
         color=ft.Colors.BLACK,

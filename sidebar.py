@@ -52,6 +52,9 @@ class SideBar(ft.Container):
                 # テキストフィールドをクリア
                 event.control.value = ""
                 event.control.update()
+                
+                # ページを更新してメッセージの変更を反映
+                page.update()
                 return
             # barcode_numberの設定ロジック
             import re
