@@ -11,6 +11,8 @@
   - 複数角度モード
 - 画像の自動トリミングと高さ推定
 - 処理済み画像のデータベース管理
+- バーコード未入力画像の後から再入力機能
+- 自動バージョン管理システム
 
 ## ファイル構成と役割
 
@@ -56,6 +58,16 @@
 - `jtext.py`
   - 日本語テキスト処理のユーティリティ
 
+### バージョン管理
+- `version.py`
+  - アプリケーションのバージョン情報を管理
+  - セマンティックバージョニング（major.minor.patch）形式
+
+- `update_version.py`
+  - バージョン自動更新スクリプト
+  - Gitコミットメッセージに基づく自動判定
+  - 手動バージョン指定機能
+
 ## データフロー
 
 ### 1. ユーザー入力
@@ -94,7 +106,52 @@ main.py (モード切り替え)
 - SQLAlchemy
 - その他必要なPythonパッケージ
 
+## バージョン管理システム
+
+### 自動バージョン更新
+Gitコミット時に自動的にバージョンが更新されます。コミットメッセージに基づいて以下のように判定されます：
+
+- **マイナーバージョン（minor）**: `"機能追加"`, `"改善"`, `"feature"`, `"add"`, `"new"`, `"enhancement"`, `"improve"`
+- **メジャーバージョン（major）**: `"major"`, `"breaking"`, `"incompatible"`, `"remove"`, `"delete"`, `"破壊的変更"`
+- **パッチバージョン（patch）**: その他（デフォルト）
+
+### 手動バージョン更新
+コマンドライン引数で手動指定も可能です：
+
+```bash
+# マイナーバージョンを上げる
+python3 update_version.py minor
+
+# メジャーバージョンを上げる
+python3 update_version.py major
+
+# パッチバージョンを上げる
+python3 update_version.py patch
+```
+
+### Git Hooks設定
+初回設定時に以下のコマンドを実行してください：
+
+```bash
+# 実行権限を付与
+chmod +x update_version.py
+
+# Git Hooksを設定
+cd .git/hooks
+cat > pre-commit << 'EOF'
+#!/bin/bash
+python3 ../../update_version.py
+git add ../../version.py
+EOF
+chmod +x pre-commit
+cd ../..
+```
+
+### バージョン表示
+アプリケーションのタイトルバーとアプリバーに現在のバージョンが表示されます。
+
 ## 注意事項
 - 画像は`./watch_folder`に配置してください
 - 処理済み画像は`./processed_images`に保存されます
 - データベースは`product_data.db`に保存されます
+- バージョン管理にはGit Hooksの設定が必要です
