@@ -1,26 +1,8 @@
 # グローバル定数設定ファイル
 
 import json
-import os
-import sys
 
-def get_settings_path():
-    """PyInstaller環境でも正しくsettings.jsonを見つける"""
-    if getattr(sys, 'frozen', False):
-        # PyInstaller環境の場合
-        base_path = sys._MEIPASS
-        settings_path = os.path.join(base_path, "settings.json")
-        if os.path.exists(settings_path):
-            return settings_path
-        # メインディレクトリも確認
-        main_dir = os.path.dirname(sys.executable)
-        settings_path = os.path.join(main_dir, "settings.json")
-        if os.path.exists(settings_path):
-            return settings_path
-    # 通常のPython環境の場合
-    return "settings.json"
-
-SETTINGS_PATH = get_settings_path()
+SETTINGS_PATH = "settings.json"
 
 def load_settings():
     with open(SETTINGS_PATH, "r") as f:

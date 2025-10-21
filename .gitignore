@@ -22,3 +22,5 @@ dist/
 product_data.db
 __pycache__/
 settings.json
+build/
+dist/
