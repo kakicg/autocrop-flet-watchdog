@@ -1,0 +1,15 @@
+flet pack main.py --name "AutoCrop" --icon autocrop.ico
+を実行するとpurojectのフォルダー直下にbuild, distにアプリが作られますがこれをpurojectのフォルダーの外に作るには？
+
+flet pack コマンドで build や dist フォルダをプロジェクトフォルダの外（例えば親ディレクトリなど）に作成したい場合は、--output オプションを使って出力先ディレクトリを指定できます。
+例: プロジェクトフォルダの外（親ディレクトリ）に出力する場合
+
+flet pack main.py --name "AutoCrop" --icon autocrop.ico --output ../output_folder
+
+--output で指定したパス（例: ../output_folder）に build と dist フォルダが作成されます。
+../output_folder はプロジェクトフォルダの外（1つ上の階層）に output_folder というディレクトリを作る例です。好きなパスに変更できます。
+注意点
+--output で指定するパスは、絶対パスでも相対パスでもOKです。
+そのパスに書き込み権限が必要です。
+まとめ
+--output オプションを使えば、build/dist の出力先を自由に指定できます。

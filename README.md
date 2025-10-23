@@ -155,3 +155,7 @@ cd ../..
 - 処理済み画像は`./processed_images`に保存されます
 - データベースは`product_data.db`に保存されます
 - バージョン管理にはGit Hooksの設定が必要です
+
+アプリ AutoCrop　の生成コマンド履歴　2025/10/22
+
+C:\Users\kakic\AppData\Roaming\Python\Python312\Scripts\flet.exe pack main.py --name "AutoCrop" --icon autocrop.ico
