@@ -1,15 +1,47 @@
 import cv2
 import numpy as np
 import os
-from config import get_PROCESSED_DIR, get_A, get_B
+from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA
 
 # (No changes here yet, just preparing for import of constants from config.py)
+
+def apply_tone_curve(image, gamma=1.5):
+    """
+    トーンカーブを適用して中間値を下げ、コントラストを上げる
+    
+    Args:
+        image: BGR形式の画像
+        gamma: ガンマ値（大きいほど中間値が下がり、コントラストが上がる）
+    
+    Returns:
+        処理済みのBGR画像
+    """
+    # 0-255の範囲でルックアップテーブルを作成
+    lut = np.zeros((1, 256), dtype=np.uint8)
+    for i in range(256):
+        # ガンマ補正でコントラストを上げる
+        # 中間値（128付近）を下げるように調整
+        normalized = i / 255.0
+        # S字カーブ風の調整で中間値を下げる
+        adjusted = np.power(normalized, gamma) * 255.0
+        # さらにコントラストを強調
+        adjusted = np.clip(adjusted, 0, 255)
+        lut[0, i] = int(adjusted)
+    
+    # 各チャンネルにLUTを適用
+    result = cv2.LUT(image, lut)
+    return result
 
 def process_image(original_image_path, processed_file_path, preview_name):
     # 元のファイル名を抽出
     
-    image = cv2.imread(original_image_path)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # オリジナル画像を読み込み（トリミング用に保持）
+    original_image = cv2.imread(original_image_path)
+    
+    # トーンカーブを適用してコントラストを上げた画像を作成（輪郭検出用のみ）
+    gamma_value = get_GAMMA()
+    enhanced_image = apply_tone_curve(original_image, gamma_value)
+    gray = cv2.cvtColor(enhanced_image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
     kernel = np.ones((5, 5), np.uint8)
     opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
@@ -38,9 +70,9 @@ def process_image(original_image_path, processed_file_path, preview_name):
     merged_boxes = merge_boxes(bounding_boxes)
     # 結合されたバウンディングボックスを描画（赤色の矩形）
     # for box in merged_boxes:
-    #     cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
+    #     cv2.rectangle(enhanced_image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
     
-    outerbox_height = image.shape[0]
+    outerbox_height = original_image.shape[0]
     top_y = merged_boxes[0][1]
     if len(merged_boxes)>0:
         outerbox_height = outerbox_height - top_y
@@ -49,22 +81,22 @@ def process_image(original_image_path, processed_file_path, preview_name):
     if top_y >= top_margin:
         outerbox_height += top_margin
     else:
-        outerbox_height = image.shape[0]
+        outerbox_height = original_image.shape[0]
     outerbox_width = outerbox_height * 9 // 16
-    left = (image.shape[1] - outerbox_width)//2
-    top = image.shape[0] - outerbox_height
+    left = (original_image.shape[1] - outerbox_width)//2
+    top = original_image.shape[0] - outerbox_height
     top_left = (left, top)
     print(f"top_left:{top_left}")
 
-    bottom_right = (left + outerbox_width , image.shape[0])
+    bottom_right = (left + outerbox_width , original_image.shape[0])
     print(f"bottom_right:{bottom_right}")
 
     # top_left, bottom_right = (x1, y1), (x2, y2)
     x1, y1 = top_left
     x2, y2 = bottom_right
 
-    # 画像をトリミング
-    cropped_image = image[y1:y2, x1:x2]
+    # オリジナル画像からトリミング（コントラスト調整は適用しない）
+    cropped_image = original_image[y1:y2, x1:x2]
     
     # 縦ピクセルサイズを1280にリサイズ（軽量化）
     height, width = cropped_image.shape[:2]

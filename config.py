@@ -38,6 +38,33 @@ def get_PROCESSED_DIR():
 def get_WATCH_DIR():
     return load_settings()["WATCH_DIR"]
 
+def initialize_settings():
+    """アプリケーション起動時に設定を初期化。新しい項目があれば追加"""
+    try:
+        settings = load_settings()
+        updated = False
+        
+        # GAMMA項目がない場合はデフォルト値3.0を追加
+        if "GAMMA" not in settings:
+            settings["GAMMA"] = 3.0
+            updated = True
+        
+        # 設定が更新された場合はファイルに保存
+        if updated:
+            with open(SETTINGS_PATH, "w") as f:
+                json.dump(settings, f, indent=2)
+    except Exception as e:
+        print(f"設定の初期化エラー: {e}")
+
+def get_GAMMA():
+    """ガンマ値を取得"""
+    settings = load_settings()
+    # 念のため、まだGAMMAがない場合は初期化を試みる
+    if "GAMMA" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("GAMMA", 3.0)
+
 def set_A_B(a, b):
     settings = load_settings()
     settings["A"] = a

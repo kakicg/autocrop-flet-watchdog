@@ -6,8 +6,11 @@ import os
 import asyncio
 import sys
 import time
-from config import get_PROCESSED_DIR
+from config import get_PROCESSED_DIR, initialize_settings
 from version import VERSION
+
+# アプリケーション起動時に設定を初期化（新しい項目があれば追加）
+initialize_settings()
 
 if sys.stdout is None:
     import io
