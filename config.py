@@ -38,6 +38,15 @@ def get_PROCESSED_DIR():
 def get_WATCH_DIR():
     return load_settings()["WATCH_DIR"]
 
+def get_PREVIEW_DIR():
+    """プレビューフォルダーのパスを取得"""
+    settings = load_settings()
+    # 念のため、まだPREVIEW_DIRがない場合は初期化を試みる
+    if "PREVIEW_DIR" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("PREVIEW_DIR", "preview")
+
 def initialize_settings():
     """アプリケーション起動時に設定を初期化。新しい項目があれば追加"""
     try:
@@ -47,6 +56,11 @@ def initialize_settings():
         # GAMMA項目がない場合はデフォルト値3.0を追加
         if "GAMMA" not in settings:
             settings["GAMMA"] = 3.0
+            updated = True
+        
+        # PREVIEW_DIR項目がない場合はデフォルト値"preview"を追加
+        if "PREVIEW_DIR" not in settings:
+            settings["PREVIEW_DIR"] = "preview"
             updated = True
         
         # 設定が更新された場合はファイルに保存
@@ -81,5 +95,19 @@ def set_PROCESSED_DIR(path):
 def set_WATCH_DIR(path):
     settings = load_settings()
     settings["WATCH_DIR"] = path
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_GAMMA(gamma):
+    """ガンマ値を設定"""
+    settings = load_settings()
+    settings["GAMMA"] = gamma
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_PREVIEW_DIR(path):
+    """プレビューフォルダーのパスを設定"""
+    settings = load_settings()
+    settings["PREVIEW_DIR"] = path
     with open(SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2) 

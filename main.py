@@ -6,7 +6,7 @@ import os
 import asyncio
 import sys
 import time
-from config import get_PROCESSED_DIR, initialize_settings
+from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings
 from version import VERSION
 
 # アプリケーション起動時に設定を初期化（新しい項目があれば追加）
@@ -55,6 +55,8 @@ def main(page: ft.Page):
         page.side_bar.set_barcode_field_visible(False)
         page.side_bar.set_processed_dir_setting_visible(True)
         page.side_bar.set_watch_dir_setting_visible(False)
+        page.side_bar.set_preview_dir_setting_visible(False)
+        page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.top_message_text.value = "保存先ディレクトリ設定モードです。設定後は再起動してください。"
         page.update()
 
@@ -62,7 +64,27 @@ def main(page: ft.Page):
         page.side_bar.set_barcode_field_visible(False)
         page.side_bar.set_processed_dir_setting_visible(False)
         page.side_bar.set_watch_dir_setting_visible(True)
+        page.side_bar.set_preview_dir_setting_visible(False)
+        page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.top_message_text.value = "監視フォルダ設定モードです。設定後は再起動してください。"
+        page.update()
+    
+    def open_preview_dir_setting(event):
+        page.side_bar.set_barcode_field_visible(False)
+        page.side_bar.set_processed_dir_setting_visible(False)
+        page.side_bar.set_watch_dir_setting_visible(False)
+        page.side_bar.set_preview_dir_setting_visible(True)
+        page.side_bar.set_gamma_setting_visible(False)
+        page.side_bar.top_message_text.value = "プレビューフォルダー設定モードです。設定後は再起動してください。"
+        page.update()
+    
+    def open_gamma_setting(event):
+        page.side_bar.set_barcode_field_visible(False)
+        page.side_bar.set_processed_dir_setting_visible(False)
+        page.side_bar.set_watch_dir_setting_visible(False)
+        page.side_bar.set_preview_dir_setting_visible(False)
+        page.side_bar.set_gamma_setting_visible(True)
+        page.side_bar.top_message_text.value = "GAMMA設定モードです。スライダーでコントラスト調整値を変更できます。"
         page.update()
 
     page.title = f"Auto Crop App v{VERSION}"
@@ -105,7 +127,7 @@ def main(page: ft.Page):
     
     # previewフォルダ内の10日以上前のファイルを削除
     try:
-        preview_dir = "preview"
+        preview_dir = get_PREVIEW_DIR()
         if os.path.exists(preview_dir):
             current_time = time.time()
             ten_days_ago = current_time - (10 * 24 * 60 * 60)  # 10日前のタイムスタンプ
@@ -136,6 +158,8 @@ def main(page: ft.Page):
                     ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
                     ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
                     ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
+                    ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
+                    ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]

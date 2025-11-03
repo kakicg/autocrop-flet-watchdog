@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA
+from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
@@ -110,7 +110,7 @@ def process_image(original_image_path, processed_file_path, preview_name):
     print(f"画像が '{processed_file_path}' として保存されました。")
     
     # previewフォルダに同じ画像を保存
-    preview_dir = "preview"
+    preview_dir = get_PREVIEW_DIR()
     os.makedirs(preview_dir, exist_ok=True)  # previewフォルダを作成（なければ作成）
     preview_file_path = os.path.join(preview_dir, preview_name)
     cv2.imwrite(preview_file_path, cropped_image)

@@ -5,7 +5,7 @@ import colorsys
 import os
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, get_PROCESSED_DIR, get_WATCH_DIR
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -259,9 +259,97 @@ class SideBar(ft.Container):
                 watch_dir_pick_button, watch_dir_button, watch_dir_cancel_button
             ], alignment=ft.MainAxisAlignment.START, spacing=5)
         ], spacing=5, visible=False)
+        
+        # --- Preview directory settings UI ---
+        preview_dir_field = ft.TextField(
+            label="プレビューフォルダー (PREVIEW_DIR)",
+            value=get_PREVIEW_DIR(),
+            width=220,
+            dense=True,
+        )
+        def preview_dir_pick_result(e):
+            if e.path:
+                preview_dir_field.value = e.path
+                preview_dir_field.update()
+        def update_preview_dir(event):
+            set_PREVIEW_DIR(preview_dir_field.value)
+            page.snack_bar = ft.SnackBar(ft.Text("プレビューフォルダーを更新しました。再起動が必要です。"))
+            page.snack_bar.open = True
+            self.set_preview_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        def cancel_preview_dir_setting(event):
+            self.set_preview_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        preview_dir_picker = ft.FilePicker(on_result=preview_dir_pick_result)
+        page.overlay.append(preview_dir_picker)
+        preview_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: preview_dir_picker.get_directory_path())
+        preview_dir_button = ft.ElevatedButton("更新", on_click=update_preview_dir)
+        preview_dir_cancel_button = ft.ElevatedButton("キャンセル", on_click=cancel_preview_dir_setting)
+        preview_dir_row = ft.Column([
+            preview_dir_field,
+            ft.Row([
+                preview_dir_pick_button, preview_dir_button, preview_dir_cancel_button
+            ], alignment=ft.MainAxisAlignment.START, spacing=5)
+        ], spacing=5, visible=False)
+        
+        # --- GAMMA settings UI ---
+        gamma_label = ft.Text(
+            "GAMMA設定 (コントラスト調整)",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        gamma_value_text = ft.Text(
+            value=f"{get_GAMMA():.1f}",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=14,
+        )
+        def update_gamma_label(value):
+            gamma_value_text.value = f"{value:.1f}"
+            gamma_value_text.update()
+        def on_gamma_change(e):
+            gamma_value = e.control.value
+            update_gamma_label(gamma_value)
+            set_GAMMA(gamma_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"GAMMA値を{gamma_value:.1f}に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        gamma_slider = ft.Slider(
+            min=1.0,
+            max=5.0,
+            value=get_GAMMA(),
+            divisions=40,  # 0.1刻みで40段階
+            on_change=on_gamma_change,
+        )
+        def update_gamma_setting(event):
+            self.set_gamma_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        gamma_cancel_button = ft.ElevatedButton("閉じる", on_click=update_gamma_setting)
+        gamma_row = ft.Column([
+            gamma_label,
+            ft.Row([
+                ft.Container(
+                    content=gamma_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                ),
+                ft.Container(
+                    content=gamma_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Row([
+                gamma_cancel_button
+            ], alignment=ft.MainAxisAlignment.END, spacing=5)
+        ], spacing=10, visible=False)
+        
         dir_settings_column = ft.Column([
             processed_dir_row,
             watch_dir_row,
+            preview_dir_row,
+            gamma_row,
         ], spacing=5)
         
         self.content = ft.Column(
@@ -272,6 +360,11 @@ class SideBar(ft.Container):
         # Store for later control
         self.processed_dir_row = processed_dir_row
         self.watch_dir_row = watch_dir_row
+        self.preview_dir_row = preview_dir_row
+        self.preview_dir_picker = preview_dir_picker
+        self.gamma_row = gamma_row
+        self.gamma_slider = gamma_slider
+        self.gamma_value_text = gamma_value_text
         self.processed_dir_picker = processed_dir_picker
         self.watch_dir_picker = watch_dir_picker
         self.barcode_textfield = barcode_textfield
@@ -288,6 +381,19 @@ class SideBar(ft.Container):
     def set_watch_dir_setting_visible(self, visible: bool):
         self.watch_dir_row.visible = visible
         self.watch_dir_row.update()
+    
+    def set_preview_dir_setting_visible(self, visible: bool):
+        self.preview_dir_row.visible = visible
+        self.preview_dir_row.update()
+    
+    def set_gamma_setting_visible(self, visible: bool):
+        self.gamma_row.visible = visible
+        if visible:
+            # 表示時に現在の値を反映
+            current_gamma = get_GAMMA()
+            self.gamma_slider.value = current_gamma
+            self.gamma_value_text.value = f"{current_gamma:.1f}"
+        self.gamma_row.update()
 
 def reprocess_image_with_barcode(page, image_data, barcode_whole):
     """バーコード未入力画像の再処理"""
