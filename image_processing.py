@@ -82,7 +82,7 @@ def process_image(original_image_path, processed_file_path, preview_name):
         outerbox_height += top_margin
     else:
         outerbox_height = original_image.shape[0]
-    outerbox_width = outerbox_height * 9 // 16
+    outerbox_width = outerbox_height * 3 // 4
     left = (original_image.shape[1] - outerbox_width)//2
     top = original_image.shape[0] - outerbox_height
     top_left = (left, top)
