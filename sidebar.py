@@ -416,9 +416,62 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
         new_processed_name = f"{barcode_number}.jpg"
         new_processed_path = os.path.join(barcode_folder_path, new_processed_name)
         
-        # ファイルを移動
+        # ファイルを移動（既に移動されている場合は現在のパスを確認）
         import shutil
-        shutil.move(image_data['processed_path'], new_processed_path)
+        old_processed_path = image_data['processed_path']
+        old_barcode_number = image_data.get('barcode_number')  # 既存のバーコード番号を取得
+        
+        # ファイルが存在しない場合、データベースから最新のパスを取得
+        if not os.path.exists(old_processed_path):
+            # データベースから同じoriginal_urlの最新のレコードを検索
+            latest_item = session.query(ItemInfo).filter(
+                ItemInfo.original_url == image_data.get('image_path')
+            ).order_by(ItemInfo.id.desc()).first()
+            
+            if latest_item and latest_item.precessed_url and os.path.exists(latest_item.precessed_url):
+                # データベースに記録されている最新のパスを使用
+                old_processed_path = latest_item.precessed_url
+                # 古いバーコード番号も取得（パスから抽出）
+                old_barcode_from_path = os.path.splitext(os.path.basename(old_processed_path))[0]
+                if old_barcode_from_path and old_barcode_from_path != 'unknown':
+                    old_barcode_number = old_barcode_from_path
+                print(f"データベースから最新のパスを取得: {old_processed_path}")
+            elif os.path.exists(new_processed_path):
+                # 既に移動済みの場合は、そのまま使用
+                old_processed_path = new_processed_path
+                print(f"既に移動済みのファイルを使用: {new_processed_path}")
+            else:
+                # ファイルが見つからない場合はエラー
+                raise FileNotFoundError(f"処理済みファイルが見つかりません: {image_data['processed_path']}")
+        
+        # 古いバーコード番号が存在し、新しいバーコード番号と異なる場合、古いCSVファイルを削除
+        if old_barcode_number and old_barcode_number != barcode_number:
+            old_barcode_prefix = old_barcode_number[:2] if len(old_barcode_number) >= 2 else "XX"
+            old_barcode_folder_path = os.path.join(root_folder_path, old_barcode_prefix)
+            old_csv_file_path = os.path.join(old_barcode_folder_path, f"{old_barcode_number}.csv")
+            if os.path.exists(old_csv_file_path):
+                try:
+                    os.remove(old_csv_file_path)
+                    print(f"古いCSVファイルを削除: {old_csv_file_path}")
+                except Exception as e:
+                    print(f"古いCSVファイルの削除エラー: {e}")
+        
+        # ファイルが存在し、新しいパスと異なる場合のみ移動
+        if os.path.exists(old_processed_path) and old_processed_path != new_processed_path:
+            # 既に新しいパスにファイルが存在する場合は削除してから移動
+            if os.path.exists(new_processed_path):
+                os.remove(new_processed_path)
+            shutil.move(old_processed_path, new_processed_path)
+            print(f"ファイルを移動: {old_processed_path} -> {new_processed_path}")
+        
+        # image_dataを更新して、次回の再処理に備える
+        image_data['processed_path'] = new_processed_path
+        image_data['barcode_number'] = barcode_number  # バーコード番号も保存
+        
+        # page.sessionのpending_image_dataも更新（次回クリック時に正しいパスが使われるように）
+        current_pending = page.session.get('pending_image_data')
+        if current_pending and current_pending.get('container') == image_data.get('container'):
+            page.session.set('pending_image_data', image_data)
         
         # CSVファイルに書き込み
         csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
@@ -459,11 +512,14 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
                 # text_container（ft.Container）を探す
                 if isinstance(child, ft.Container) and hasattr(child, 'content'):
                     if isinstance(child.content, ft.Column):
-                        for text_item in child.content.controls:
-                            if isinstance(text_item, ft.Text) and text_item.color == ft.Colors.RED:
-                                text_item.value = barcode_number
-                                text_item.color = ft.Colors.WHITE
-                                break
+                        # 最初のText要素（バーコード番号表示）を更新
+                        text_items = [item for item in child.content.controls if isinstance(item, ft.Text)]
+                        if text_items:
+                            # 最初のText要素がバーコード番号表示
+                            first_text = text_items[0]
+                            first_text.value = barcode_number
+                            first_text.color = ft.Colors.WHITE
+                            break
         
         # サイドバーにバーコード番号を追加
         page.side_bar.middle_lists.insert(0, 
