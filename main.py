@@ -28,13 +28,29 @@ def main(page: ft.Page):
             page.observer.join()
         page.window.close()
 
+    def update_mode_display():
+        """現在のモード状態に基づいてメニューバーのモード表示を更新"""
+        current_mode = page.session.get("mode") or "barcode_mode"
+        test_mode = page.session.get('test_mode') or False
+        
+        if current_mode == "real_height_mode":
+            if test_mode:
+                mode_text.value = "実測値入力モード + テストモード"
+            else:
+                mode_text.value = "実測値入力モード"
+        else:  # barcode_mode
+            if test_mode:
+                mode_text.value = "テストモード"
+            else:
+                mode_text.value = "通常モード"
+        # mode_text.update()は削除（page.update()で更新される）
+    
     def change_mode(event):
         print(f"change_mode: {page.session.get('mode')}")
         current_mode = page.session.get("mode")
 
         if current_mode is None or current_mode == "barcode_mode":
             new_mode = "real_height_mode"
-            mode_text.value = "実測値入力モード"
             page.session.set("real_height_step", 1)
             page.session.set("real_height_input_waiting", True)
             page.side_bar.top_message_text.value = "1件目の商品の実測値を入力してください。"
@@ -42,13 +58,28 @@ def main(page: ft.Page):
             page.side_bar.barcode_textfield.visible = False
         else:
             new_mode = "barcode_mode"
-            mode_text.value = "通常モード"
             page.session.set("real_height_step", None)
             page.session.set("real_height_input_waiting", None)
             page.side_bar.top_message_text.value = "バーコード自動入力"
             page.side_bar.real_height_textfield.visible = False
             page.side_bar.barcode_textfield.visible = True
         page.session.set("mode", new_mode)
+        update_mode_display()
+        page.update()
+    
+    def toggle_test_mode(event):
+        """テストモードの切り替え"""
+        current_test_mode = page.session.get('test_mode') or False
+        new_test_mode = not current_test_mode
+        
+        page.session.set('test_mode', new_test_mode)
+        
+        if new_test_mode:
+            page.side_bar.top_message_text.value = "テストモード: 白黒画像を表示します"
+        else:
+            page.side_bar.top_message_text.value = "バーコード自動入力"
+        
+        update_mode_display()
         page.update()
 
     def open_processed_dir_setting(event):
@@ -93,6 +124,8 @@ def main(page: ft.Page):
     
     # デフォルトモードを設定
     page.session.set("mode", "barcode_mode")
+    # テストモードを初期化（デフォルトはFalse）
+    page.session.set("test_mode", False)
     # バーコード履歴リストを初期化
     page.session.set("barcode_list", [])
     # processed_dir をセッションに保持
@@ -156,6 +189,8 @@ def main(page: ft.Page):
             ft.PopupMenuButton(
                 items=[
                     ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
+                    ft.PopupMenuItem(text="テストモード切り替え", on_click=toggle_test_mode),
+                    ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
                     ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
                     ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
@@ -186,6 +221,8 @@ def main(page: ft.Page):
     side_bar.width = 300
     page.side_bar = side_bar
     page.main_view = main_view
+    page.mode_text = mode_text
+    page.update_mode_display = update_mode_display
 
     layout = ft.Row(
         [main_view, side_bar],
@@ -196,6 +233,9 @@ def main(page: ft.Page):
 
     page.add(layout)
     page.observer = start_watchdog(page, [main_view])
+    
+    # 初期モード表示を更新（page.add()の後に実行）
+    update_mode_display()
     page.update()
 
 # Fletアプリケーションを実行

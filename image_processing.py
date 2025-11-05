@@ -46,6 +46,16 @@ def process_image(original_image_path, processed_file_path, preview_name):
     kernel = np.ones((5, 5), np.uint8)
     opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
     dilated = cv2.dilate(opening, kernel, iterations=4)
+
+    # テスト用：輪郭検出のために作成した白黒画像をpreviewフォルダーに保存
+    preview_dir = get_PREVIEW_DIR()
+    os.makedirs(preview_dir, exist_ok=True)
+    # preview_nameから拡張子を除いてベース名を取得
+    base_name = os.path.splitext(preview_name)[0]
+    binary_preview_path = os.path.join(preview_dir, f"{base_name}_binary.jpg")
+    cv2.imwrite(binary_preview_path, binary)
+    print(f"白黒画像（テスト用）が '{binary_preview_path}' として保存されました。")
+
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     bounding_boxes = []
     for contour in contours:
@@ -119,5 +129,5 @@ def process_image(original_image_path, processed_file_path, preview_name):
     estimated_height = top_y * get_A() + get_B()
     # 5刻みの整数に丸める
     estimated_height = round(estimated_height / 5) * 5
-    return top_y, estimated_height, processed_file_path, preview_file_path
+    return top_y, estimated_height, processed_file_path, preview_file_path, binary_preview_path
 

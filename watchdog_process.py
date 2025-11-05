@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B
 import csv
+from config import get_GAMMA
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
@@ -86,7 +87,7 @@ class ImageHandler(FileSystemEventHandler):
         
         output_file_path = os.path.join(barcode_folder_path, processed_name)
 
-        top_y, estimated_height, processed_path, preview_path = process_image(
+        top_y, estimated_height, processed_path, preview_path, test_path = process_image(
             image_path, 
             output_file_path, 
             preview_name
@@ -141,9 +142,12 @@ class ImageHandler(FileSystemEventHandler):
                     set_A_B(a, b)
             self.page.session.set("real_height", None)
 
+
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
         abs_preview_path = os.path.abspath(preview_path)
+        abs_test_path = os.path.abspath(test_path)
+
 
         # オリジナル画像を削除
         try:
@@ -205,58 +209,107 @@ class ImageHandler(FileSystemEventHandler):
                     self.page.side_bar.barcode_textfield.focus()
                     self.page.update()
         
+        text_container = ft.Container(
+                            content=ft.Column(
+                                [
+                                    ft.Text(
+                                        f"{label_text}",
+                                        size=18,  # 1.5倍に拡大
+                                        color=label_color,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"{preview_name}",
+                                        style=text_style,
+                                        size=18,
+                                        color=ft.Colors.WHITE,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"推定高さ:{estimated_height}",
+                                        style=text_style,
+                                        size=18,  # 1.5倍に拡大
+                                        color=ft.Colors.WHITE,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"[ {current_time} ]",
+                                        style=text_style,
+                                        size=10,
+                                        color=ft.Colors.WHITE,
+                                        weight=ft.FontWeight.W_100,
+                                    ),
+                                ]
+                            ),
+                        )
+        test_text_container = ft.Container(
+                            content=ft.Column(
+                                [
+                                    ft.Text(
+                                        f"【高さ推定用マスク】",
+                                        size=12,
+                                        color=ft.Colors.YELLOW,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"{preview_name}",
+                                        style=text_style,
+                                        size=12,
+                                        color=ft.Colors.YELLOW,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"ガンマ値:{get_GAMMA()}",
+                                        style=text_style,
+                                        size=12,
+                                        color=ft.Colors.YELLOW,
+                                        weight=ft.FontWeight.W_600,
+                                    ),
+                                    ft.Text(
+                                        f"[ {current_time} ]",
+                                        style=text_style,
+                                        size=10,
+                                        color=ft.Colors.WHITE,
+                                        weight=ft.FontWeight.W_100,
+                                    ),
+                                ]
+                            ),
+                        )
         # 新しい画像コンテナを作成
-        image_container = ft.Container(
-            content=ft.Column(
-                [
-                    ft.Image(
-                        src=abs_preview_path,
-                        fit=ft.ImageFit.CONTAIN,
-                        repeat=ft.ImageRepeat.NO_REPEAT,
-                        height=300,  # 1.5倍に拡大
-                    ),
-                    ft.Text(
-                        f"{label_text}",
-                        size=18,  # 1.5倍に拡大
-                        color=label_color,
-                        weight=ft.FontWeight.W_600,
-                    ),
-                    ft.Text(
-                        f"{preview_name}",
-                        style=text_style,
-                        size=18,
-                        color=ft.Colors.WHITE,
-                        weight=ft.FontWeight.W_600,
-                    ),
-                    ft.Text(
-                        f"推定高さ:{estimated_height}",
-                        style=text_style,
-                        size=18,  # 1.5倍に拡大
-                        color=ft.Colors.WHITE,
-                        weight=ft.FontWeight.W_600,
-                    ),
-                    ft.Text(
-                        f"[ {current_time} ]",
-                        style=text_style,
-                        size=10,
-                        color=ft.Colors.WHITE,
-                        weight=ft.FontWeight.W_100,
-                    ),
-                ],
-                spacing=5,
-            ),
-            padding=10,
-            bgcolor=ft.Colors.BLUE_GREY_900,
-            border_radius=10,
-            margin=5,
-            height=450,
-            on_click=on_image_container_click if not barcode_number else None,  # バーコード未入力の場合のみクリック可能
-        )
+        def create_image_container(image_path, text_container):
+            return ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Image(
+                                    src=image_path,
+                                    fit=ft.ImageFit.CONTAIN,
+                                    repeat=ft.ImageRepeat.NO_REPEAT,
+                                    height=300,  # 1.5倍に拡大
+                                ),
+                                text_container,
+                            ],
+                            spacing=5,
+                        ),
+                        padding=10,
+                        bgcolor=ft.Colors.BLUE_GREY_900,
+                        border_radius=10,
+                        margin=5,
+                        height=450,
+                        on_click=on_image_container_click if not barcode_number else None,  # バーコード未入力の場合のみクリック可能
+                    )
+                
+        # image_container = create_image_container(abs_preview_path, text_container)
+        image_container = create_image_container(abs_preview_path, text_container)
+        test_image_container = create_image_container(abs_test_path, test_text_container)
 
         try:
             # メインビューのコントロールに追加
             
             grid_view = self.view_controls[0]
+
+            if self.page.session.get('test_mode'):
+                grid_view.controls.insert(0, test_image_container)
+
             grid_view.controls.insert(0, image_container)
             grid_view.update()
 
@@ -289,9 +342,9 @@ class ImageHandler(FileSystemEventHandler):
                     self.page.side_bar.top_message_text.value = "バーコード自動入力"
                     self.page.side_bar.real_height_textfield.visible = False
                     self.page.side_bar.barcode_textfield.visible = True
-                    # mode_textを通常モードに戻す
-                    if hasattr(self.page, 'mode_text'):
-                        self.page.mode_text.value = "通常モード"
+                    # モード表示を更新
+                    if hasattr(self.page, 'update_mode_display'):
+                        self.page.update_mode_display()
                     self.page.update()
                 
         except Exception as e:
