@@ -453,11 +453,17 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
         # GridViewコンテナの表示を更新
         container = image_data['container']
         # テキストを正常なバーコード表示に変更
-        for child in container.content.controls:
-            if isinstance(child, ft.Text) and child.color == ft.Colors.RED:
-                child.value = barcode_number
-                child.color = ft.Colors.WHITE
-                break
+        # 新しい構造では、text_container内のft.Column内のft.Textを探す
+        if hasattr(container, 'content') and isinstance(container.content, ft.Column):
+            for child in container.content.controls:
+                # text_container（ft.Container）を探す
+                if isinstance(child, ft.Container) and hasattr(child, 'content'):
+                    if isinstance(child.content, ft.Column):
+                        for text_item in child.content.controls:
+                            if isinstance(text_item, ft.Text) and text_item.color == ft.Colors.RED:
+                                text_item.value = barcode_number
+                                text_item.color = ft.Colors.WHITE
+                                break
         
         # サイドバーにバーコード番号を追加
         page.side_bar.middle_lists.insert(0, 
