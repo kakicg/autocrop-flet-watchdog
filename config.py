@@ -63,6 +63,20 @@ def initialize_settings():
             settings["PREVIEW_DIR"] = "preview"
             updated = True
         
+        # マージン項目がない場合はデフォルト値5%（パーセント）を追加
+        if "MARGIN_TOP" not in settings:
+            settings["MARGIN_TOP"] = 5.0
+            updated = True
+        if "MARGIN_BOTTOM" not in settings:
+            settings["MARGIN_BOTTOM"] = 5.0
+            updated = True
+        if "MARGIN_LEFT" not in settings:
+            settings["MARGIN_LEFT"] = 5.0
+            updated = True
+        if "MARGIN_RIGHT" not in settings:
+            settings["MARGIN_RIGHT"] = 5.0
+            updated = True
+        
         # 設定が更新された場合はファイルに保存
         if updated:
             with open(SETTINGS_PATH, "w") as f:
@@ -109,5 +123,65 @@ def set_PREVIEW_DIR(path):
     """プレビューフォルダーのパスを設定"""
     settings = load_settings()
     settings["PREVIEW_DIR"] = path
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def get_MARGIN_TOP():
+    """上マージンを取得（パーセント）"""
+    settings = load_settings()
+    if "MARGIN_TOP" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("MARGIN_TOP", 5.0)
+
+def get_MARGIN_BOTTOM():
+    """下マージンを取得（パーセント）"""
+    settings = load_settings()
+    if "MARGIN_BOTTOM" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("MARGIN_BOTTOM", 5.0)
+
+def get_MARGIN_LEFT():
+    """左マージンを取得（パーセント）"""
+    settings = load_settings()
+    if "MARGIN_LEFT" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("MARGIN_LEFT", 5.0)
+
+def get_MARGIN_RIGHT():
+    """右マージンを取得（パーセント）"""
+    settings = load_settings()
+    if "MARGIN_RIGHT" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("MARGIN_RIGHT", 5.0)
+
+def set_MARGIN_TOP(value):
+    """上マージンを設定（パーセント）"""
+    settings = load_settings()
+    settings["MARGIN_TOP"] = float(value)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_MARGIN_BOTTOM(value):
+    """下マージンを設定（パーセント）"""
+    settings = load_settings()
+    settings["MARGIN_BOTTOM"] = float(value)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_MARGIN_LEFT(value):
+    """左マージンを設定（パーセント）"""
+    settings = load_settings()
+    settings["MARGIN_LEFT"] = float(value)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_MARGIN_RIGHT(value):
+    """右マージンを設定（パーセント）"""
+    settings = load_settings()
+    settings["MARGIN_RIGHT"] = float(value)
     with open(SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2) 

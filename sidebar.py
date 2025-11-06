@@ -5,7 +5,7 @@ import colorsys
 import os
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -345,11 +345,175 @@ class SideBar(ft.Container):
             ], alignment=ft.MainAxisAlignment.END, spacing=5)
         ], spacing=10, visible=False)
         
+        # --- Margin settings UI ---
+        margin_label = ft.Text(
+            "マージン設定",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        margin_top_value_text = ft.Text(
+            value=f"{min(50.0, get_MARGIN_TOP()):.1f}%",  # 50%を超える場合は50%に制限
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        margin_bottom_value_text = ft.Text(
+            value=f"{min(50.0, get_MARGIN_BOTTOM()):.1f}%",  # 50%を超える場合は50%に制限
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        margin_left_value_text = ft.Text(
+            value=f"{min(50.0, get_MARGIN_LEFT()):.1f}%",  # 50%を超える場合は50%に制限
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        margin_right_value_text = ft.Text(
+            value=f"{min(50.0, get_MARGIN_RIGHT()):.1f}%",  # 50%を超える場合は50%に制限
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        
+        def update_margin_top_label(value):
+            margin_top_value_text.value = f"{value:.1f}%"
+            margin_top_value_text.update()
+        def update_margin_bottom_label(value):
+            margin_bottom_value_text.value = f"{value:.1f}%"
+            margin_bottom_value_text.update()
+        def update_margin_left_label(value):
+            margin_left_value_text.value = f"{value:.1f}%"
+            margin_left_value_text.update()
+        def update_margin_right_label(value):
+            margin_right_value_text.value = f"{value:.1f}%"
+            margin_right_value_text.update()
+        
+        def on_margin_top_change(e):
+            margin_value = e.control.value
+            update_margin_top_label(margin_value)
+            set_MARGIN_TOP(margin_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"上マージンを{margin_value:.1f}%に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        def on_margin_bottom_change(e):
+            margin_value = e.control.value
+            update_margin_bottom_label(margin_value)
+            set_MARGIN_BOTTOM(margin_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"下マージンを{margin_value:.1f}%に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        def on_margin_left_change(e):
+            margin_value = e.control.value
+            update_margin_left_label(margin_value)
+            set_MARGIN_LEFT(margin_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"左マージンを{margin_value:.1f}%に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        def on_margin_right_change(e):
+            margin_value = e.control.value
+            update_margin_right_label(margin_value)
+            set_MARGIN_RIGHT(margin_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"右マージンを{margin_value:.1f}%に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        
+        margin_top_slider = ft.Slider(
+            min=0,
+            max=50,
+            value=min(50.0, get_MARGIN_TOP()),  # 50%を超える場合は50%に制限
+            divisions=500,  # 0.1%刻みで500段階
+            on_change=on_margin_top_change,
+        )
+        margin_bottom_slider = ft.Slider(
+            min=0,
+            max=50,
+            value=min(50.0, get_MARGIN_BOTTOM()),  # 50%を超える場合は50%に制限
+            divisions=500,  # 0.1%刻みで500段階
+            on_change=on_margin_bottom_change,
+        )
+        margin_left_slider = ft.Slider(
+            min=0,
+            max=50,
+            value=min(50.0, get_MARGIN_LEFT()),  # 50%を超える場合は50%に制限
+            divisions=500,  # 0.1%刻みで500段階
+            on_change=on_margin_left_change,
+        )
+        margin_right_slider = ft.Slider(
+            min=0,
+            max=50,
+            value=min(50.0, get_MARGIN_RIGHT()),  # 50%を超える場合は50%に制限
+            divisions=500,  # 0.1%刻みで500段階
+            on_change=on_margin_right_change,
+        )
+        
+        def update_margin_setting(event):
+            self.set_margin_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        margin_cancel_button = ft.ElevatedButton("閉じる", on_click=update_margin_setting)
+        
+        margin_row = ft.Column([
+            margin_label,
+            ft.Row([
+                ft.Text("上:", style=ft.TextStyle(font_family="Noto Sans CJK JP"), size=12),
+                ft.Container(
+                    content=margin_top_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                    width=40,
+                ),
+                ft.Container(
+                    content=margin_top_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Row([
+                ft.Text("下:", style=ft.TextStyle(font_family="Noto Sans CJK JP"), size=12),
+                ft.Container(
+                    content=margin_bottom_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                    width=40,
+                ),
+                ft.Container(
+                    content=margin_bottom_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Row([
+                ft.Text("左:", style=ft.TextStyle(font_family="Noto Sans CJK JP"), size=12),
+                ft.Container(
+                    content=margin_left_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                    width=40,
+                ),
+                ft.Container(
+                    content=margin_left_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Row([
+                ft.Text("右:", style=ft.TextStyle(font_family="Noto Sans CJK JP"), size=12),
+                ft.Container(
+                    content=margin_right_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                    width=40,
+                ),
+                ft.Container(
+                    content=margin_right_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Row([
+                margin_cancel_button
+            ], alignment=ft.MainAxisAlignment.END, spacing=5)
+        ], spacing=10, visible=False)
+        
         dir_settings_column = ft.Column([
             processed_dir_row,
             watch_dir_row,
             preview_dir_row,
             gamma_row,
+            margin_row,
         ], spacing=5)
         
         self.content = ft.Column(
@@ -365,6 +529,15 @@ class SideBar(ft.Container):
         self.gamma_row = gamma_row
         self.gamma_slider = gamma_slider
         self.gamma_value_text = gamma_value_text
+        self.margin_row = margin_row
+        self.margin_top_slider = margin_top_slider
+        self.margin_bottom_slider = margin_bottom_slider
+        self.margin_left_slider = margin_left_slider
+        self.margin_right_slider = margin_right_slider
+        self.margin_top_value_text = margin_top_value_text
+        self.margin_bottom_value_text = margin_bottom_value_text
+        self.margin_left_value_text = margin_left_value_text
+        self.margin_right_value_text = margin_right_value_text
         self.processed_dir_picker = processed_dir_picker
         self.watch_dir_picker = watch_dir_picker
         self.barcode_textfield = barcode_textfield
@@ -394,6 +567,28 @@ class SideBar(ft.Container):
             self.gamma_slider.value = current_gamma
             self.gamma_value_text.value = f"{current_gamma:.1f}"
         self.gamma_row.update()
+    
+    def set_margin_setting_visible(self, visible: bool):
+        self.margin_row.visible = visible
+        if visible:
+            # 表示時に現在の値を反映（50%を超える場合は50%に制限）
+            current_margin_top = min(50.0, get_MARGIN_TOP())
+            current_margin_bottom = min(50.0, get_MARGIN_BOTTOM())
+            current_margin_left = min(50.0, get_MARGIN_LEFT())
+            current_margin_right = min(50.0, get_MARGIN_RIGHT())
+            self.margin_top_slider.value = current_margin_top
+            self.margin_bottom_slider.value = current_margin_bottom
+            self.margin_left_slider.value = current_margin_left
+            self.margin_right_slider.value = current_margin_right
+            self.margin_top_value_text.value = f"{current_margin_top:.1f}%"
+            self.margin_bottom_value_text.value = f"{current_margin_bottom:.1f}%"
+            self.margin_left_value_text.value = f"{current_margin_left:.1f}%"
+            self.margin_right_value_text.value = f"{current_margin_right:.1f}%"
+            self.margin_top_value_text.update()
+            self.margin_bottom_value_text.update()
+            self.margin_left_value_text.update()
+            self.margin_right_value_text.update()
+        self.margin_row.update()
 
 def reprocess_image_with_barcode(page, image_data, barcode_whole):
     """バーコード未入力画像の再処理"""

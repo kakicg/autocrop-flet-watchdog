@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR
+from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
@@ -37,6 +37,36 @@ def process_image(original_image_path, processed_file_path, preview_name):
     
     # オリジナル画像を読み込み（トリミング用に保持）
     original_image = cv2.imread(original_image_path)
+    
+    # マージンを取得（パーセント）
+    margin_top_percent = min(50.0, get_MARGIN_TOP())  # 50%を超える場合は50%に制限
+    margin_bottom_percent = min(50.0, get_MARGIN_BOTTOM())  # 50%を超える場合は50%に制限
+    margin_left_percent = min(50.0, get_MARGIN_LEFT())  # 50%を超える場合は50%に制限
+    margin_right_percent = min(50.0, get_MARGIN_RIGHT())  # 50%を超える場合は50%に制限
+    
+    # 画像サイズを取得
+    height, width = original_image.shape[:2]
+    
+    # パーセントからピクセル数を計算
+    # 上下のマージンは縦サイズに対するパーセント
+    margin_top = int(height * margin_top_percent / 100.0)
+    margin_bottom = int(height * margin_bottom_percent / 100.0)
+    # 左右のマージンは横サイズに対するパーセント
+    margin_left = int(width * margin_left_percent / 100.0)
+    margin_right = int(width * margin_right_percent / 100.0)
+    
+    # マージンを適用：上下左右にマージンを追加して黒で塗りつぶす
+    new_height = height + margin_top + margin_bottom
+    new_width = width + margin_left + margin_right
+    
+    # 新しい画像を作成（黒で初期化）
+    image_with_margin = np.zeros((new_height, new_width, 3), dtype=np.uint8)
+    
+    # 元の画像を中央に配置
+    image_with_margin[margin_top:margin_top + height, margin_left:margin_left + width] = original_image
+    
+    # マージン適用後の画像をoriginal_imageとして使用
+    original_image = image_with_margin
     
     # トーンカーブを適用してコントラストを上げた画像を作成（輪郭検出用のみ）
     gamma_value = get_GAMMA()
@@ -100,13 +130,17 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # 白黒画像を3チャンネル（BGR）に変換
     binary_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
     
+    # 画像の横のピクセル数に対して1%の線幅を計算
+    binary_width = binary_bgr.shape[1]
+    line_width = max(1, int(binary_width * 0.01))  # 最小1ピクセルを確保
+    
     # バウンディングボックスのユニオンを赤矩形で描画
     if len(merged_boxes) > 0:
         merged_box = merged_boxes[0]
-        cv2.rectangle(binary_bgr, (merged_box[0], merged_box[1]), (merged_box[2], merged_box[3]), (0, 0, 255), 32)
+        cv2.rectangle(binary_bgr, (merged_box[0], merged_box[1]), (merged_box[2], merged_box[3]), (0, 0, 255), line_width)
     
     # 最終トリミング矩形を緑矩形で描画
-    cv2.rectangle(binary_bgr, top_left, bottom_right, (0, 255, 0), 32)
+    cv2.rectangle(binary_bgr, top_left, bottom_right, (0, 255, 0), line_width)
     
     # previewフォルダーに保存
     preview_dir = get_PREVIEW_DIR()

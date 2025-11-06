@@ -4,5 +4,9 @@
   "PROCESSED_DIR": "../processed",
   "WATCH_DIR": "../watch",
   "GAMMA": 3.0,
-  "PREVIEW_DIR": "../preview"
+  "PREVIEW_DIR": "../preview",
+  "MARGIN_TOP": 25.2,
+  "MARGIN_BOTTOM": 0.0,
+  "MARGIN_LEFT": 24.8,
+  "MARGIN_RIGHT": 25.6
 }
