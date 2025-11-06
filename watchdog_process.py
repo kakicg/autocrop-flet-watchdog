@@ -291,7 +291,7 @@ class ImageHandler(FileSystemEventHandler):
                             spacing=5,
                         ),
                         padding=10,
-                        bgcolor=ft.Colors.BLUE_GREY_900,
+                        bgcolor=ft.Colors.BLUE_GREY_800,
                         border_radius=10,
                         margin=5,
                         height=450,

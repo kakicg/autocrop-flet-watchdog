@@ -134,6 +134,16 @@ def process_image(original_image_path, processed_file_path, preview_name):
     binary_width = binary_bgr.shape[1]
     line_width = max(1, int(binary_width * 0.01))  # 最小1ピクセルを確保
     
+    # マージンラインを白で描画
+    # 上側のマージンライン
+    cv2.line(binary_bgr, (0, margin_top), (binary_width, margin_top), (64, 64, 64), line_width)
+    # 下側のマージンライン
+    cv2.line(binary_bgr, (0, margin_top + height), (binary_width, margin_top + height), (64, 64, 64), line_width)
+    # 左側のマージンライン
+    cv2.line(binary_bgr, (margin_left, 0), (margin_left, binary_bgr.shape[0]), (64, 64, 64), line_width)
+    # 右側のマージンライン
+    cv2.line(binary_bgr, (margin_left + width, 0), (margin_left + width, binary_bgr.shape[0]), (64, 64, 64), line_width)
+    
     # バウンディングボックスのユニオンを赤矩形で描画
     if len(merged_boxes) > 0:
         merged_box = merged_boxes[0]
