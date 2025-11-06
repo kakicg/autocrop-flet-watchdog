@@ -55,24 +55,28 @@ def process_image(original_image_path, processed_file_path, preview_name):
     margin_left = int(width * margin_left_percent / 100.0)
     margin_right = int(width * margin_right_percent / 100.0)
     
-    # マージンを適用：上下左右にマージンを追加して黒で塗りつぶす
-    new_height = height + margin_top + margin_bottom
-    new_width = width + margin_left + margin_right
-    
-    # 新しい画像を作成（黒で初期化）
-    image_with_margin = np.zeros((new_height, new_width, 3), dtype=np.uint8)
-    
-    # 元の画像を中央に配置
-    image_with_margin[margin_top:margin_top + height, margin_left:margin_left + width] = original_image
-    
-    # マージン適用後の画像をoriginal_imageとして使用
-    original_image = image_with_margin
+    # マージン領域の境界を定義（元の画像サイズからマージン分だけ内側に入った領域）
+    margin_area_left = margin_left
+    margin_area_right = width - margin_right
+    margin_area_top = margin_top
+    margin_area_bottom = height - margin_bottom
     
     # トーンカーブを適用してコントラストを上げた画像を作成（輪郭検出用のみ）
     gamma_value = get_GAMMA()
     enhanced_image = apply_tone_curve(original_image, gamma_value)
     gray = cv2.cvtColor(enhanced_image, cv2.COLOR_BGR2GRAY)
     _, binary = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
+    
+    # マージンの外側を黒で塗りつぶす
+    # 上側のマージン外側
+    binary[0:margin_area_top, :] = 0
+    # 下側のマージン外側
+    binary[margin_area_bottom:height, :] = 0
+    # 左側のマージン外側
+    binary[:, 0:margin_area_left] = 0
+    # 右側のマージン外側
+    binary[:, margin_area_right:width] = 0
+    
     kernel = np.ones((5, 5), np.uint8)
     opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
     dilated = cv2.dilate(opening, kernel, iterations=4)
@@ -103,28 +107,69 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # for box in merged_boxes:
     #     cv2.rectangle(enhanced_image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
     
-    outerbox_height = original_image.shape[0]
-    top_y = merged_boxes[0][1]
+    outerbox_height = height
+    top_y = merged_boxes[0][1] if len(merged_boxes) > 0 else margin_area_top
     if len(merged_boxes)>0:
-        outerbox_height = outerbox_height - top_y
+        outerbox_height = height - top_y
     print(f"outerbox_height:{outerbox_height}")
     top_margin = 80
     if top_y >= top_margin:
         outerbox_height += top_margin
     else:
-        outerbox_height = original_image.shape[0]
+        outerbox_height = height
     outerbox_width = outerbox_height * 3 // 4
-    left = (original_image.shape[1] - outerbox_width)//2
-    top = original_image.shape[0] - outerbox_height
-    top_left = (left, top)
+    left = (width - outerbox_width)//2
+    top = height - outerbox_height
+    
+    # マージン領域内で縦横比4:3（縦4横3）を保つようにトリミング領域を計算
+    # マージン領域のサイズを取得
+    margin_area_width = margin_area_right - margin_area_left
+    margin_area_height = margin_area_bottom - margin_area_top
+    
+    # 縦横比4:3に合わせる（width = height * 3 / 4）
+    # マージン領域内に収まる最大の4:3の矩形を計算
+    if margin_area_width * 4 <= margin_area_height * 3:
+        # 幅を基準に高さを計算
+        crop_width = margin_area_width
+        crop_height = margin_area_width * 4 // 3
+    else:
+        # 高さを基準に幅を計算
+        crop_height = margin_area_height
+        crop_width = margin_area_height * 3 // 4
+    
+    # 元の計算されたトリミング領域とマージン領域内の最大4:3矩形を比較
+    # より小さい方を選択（ただし、マージン領域内に収まる必要がある）
+    if outerbox_width <= crop_width and outerbox_height <= crop_height:
+        # 元の計算された領域を使用
+        crop_width = outerbox_width
+        crop_height = outerbox_height
+        # マージン領域内に収まるように位置を調整
+        x1 = max(margin_area_left, min(left, margin_area_right - crop_width))
+        y1 = max(margin_area_top, min(top, margin_area_bottom - crop_height))
+    else:
+        # マージン領域内の最大4:3矩形を使用
+        # 中央に配置
+        center_x = (margin_area_left + margin_area_right) // 2
+        center_y = (margin_area_top + margin_area_bottom) // 2
+        x1 = center_x - crop_width // 2
+        y1 = center_y - crop_height // 2
+        # マージン領域内に制限
+        if x1 < margin_area_left:
+            x1 = margin_area_left
+        if x1 + crop_width > margin_area_right:
+            x1 = margin_area_right - crop_width
+        if y1 < margin_area_top:
+            y1 = margin_area_top
+        if y1 + crop_height > margin_area_bottom:
+            y1 = margin_area_bottom - crop_height
+    
+    x2 = x1 + crop_width
+    y2 = y1 + crop_height
+    
+    top_left = (x1, y1)
+    bottom_right = (x2, y2)
     print(f"top_left:{top_left}")
-
-    bottom_right = (left + outerbox_width , original_image.shape[0])
     print(f"bottom_right:{bottom_right}")
-
-    # top_left, bottom_right = (x1, y1), (x2, y2)
-    x1, y1 = top_left
-    x2, y2 = bottom_right
 
     # テスト用：白黒画像に矩形を描画して保存
     # 白黒画像を3チャンネル（BGR）に変換
@@ -134,15 +179,15 @@ def process_image(original_image_path, processed_file_path, preview_name):
     binary_width = binary_bgr.shape[1]
     line_width = max(1, int(binary_width * 0.01))  # 最小1ピクセルを確保
     
-    # マージンラインを白で描画
+    # マージンラインを描画（マージン領域の境界）
     # 上側のマージンライン
-    cv2.line(binary_bgr, (0, margin_top), (binary_width, margin_top), (64, 64, 64), line_width)
+    cv2.line(binary_bgr, (0, margin_area_top), (binary_width, margin_area_top), (64, 64, 64), line_width)
     # 下側のマージンライン
-    cv2.line(binary_bgr, (0, margin_top + height), (binary_width, margin_top + height), (64, 64, 64), line_width)
+    cv2.line(binary_bgr, (0, margin_area_bottom), (binary_width, margin_area_bottom), (64, 64, 64), line_width)
     # 左側のマージンライン
-    cv2.line(binary_bgr, (margin_left, 0), (margin_left, binary_bgr.shape[0]), (64, 64, 64), line_width)
+    cv2.line(binary_bgr, (margin_area_left, 0), (margin_area_left, binary_bgr.shape[0]), (64, 64, 64), line_width)
     # 右側のマージンライン
-    cv2.line(binary_bgr, (margin_left + width, 0), (margin_left + width, binary_bgr.shape[0]), (64, 64, 64), line_width)
+    cv2.line(binary_bgr, (margin_area_right, 0), (margin_area_right, binary_bgr.shape[0]), (64, 64, 64), line_width)
     
     # バウンディングボックスのユニオンを赤矩形で描画
     if len(merged_boxes) > 0:

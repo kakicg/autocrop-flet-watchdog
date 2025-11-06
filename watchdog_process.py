@@ -221,7 +221,7 @@ class ImageHandler(FileSystemEventHandler):
                                     ft.Text(
                                         f"{preview_name}",
                                         style=text_style,
-                                        size=18,
+                                        size=12,
                                         color=ft.Colors.WHITE,
                                         weight=ft.FontWeight.W_600,
                                     ),
