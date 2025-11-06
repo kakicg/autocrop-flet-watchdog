@@ -47,15 +47,6 @@ def process_image(original_image_path, processed_file_path, preview_name):
     opening = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
     dilated = cv2.dilate(opening, kernel, iterations=4)
 
-    # テスト用：輪郭検出のために作成した白黒画像をpreviewフォルダーに保存
-    preview_dir = get_PREVIEW_DIR()
-    os.makedirs(preview_dir, exist_ok=True)
-    # preview_nameから拡張子を除いてベース名を取得
-    base_name = os.path.splitext(preview_name)[0]
-    binary_preview_path = os.path.join(preview_dir, f"{base_name}_binary.jpg")
-    cv2.imwrite(binary_preview_path, binary)
-    print(f"白黒画像（テスト用）が '{binary_preview_path}' として保存されました。")
-
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     bounding_boxes = []
     for contour in contours:
@@ -104,6 +95,27 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # top_left, bottom_right = (x1, y1), (x2, y2)
     x1, y1 = top_left
     x2, y2 = bottom_right
+
+    # テスト用：白黒画像に矩形を描画して保存
+    # 白黒画像を3チャンネル（BGR）に変換
+    binary_bgr = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+    
+    # バウンディングボックスのユニオンを赤矩形で描画
+    if len(merged_boxes) > 0:
+        merged_box = merged_boxes[0]
+        cv2.rectangle(binary_bgr, (merged_box[0], merged_box[1]), (merged_box[2], merged_box[3]), (0, 0, 255), 32)
+    
+    # 最終トリミング矩形を緑矩形で描画
+    cv2.rectangle(binary_bgr, top_left, bottom_right, (0, 255, 0), 32)
+    
+    # previewフォルダーに保存
+    preview_dir = get_PREVIEW_DIR()
+    os.makedirs(preview_dir, exist_ok=True)
+    # preview_nameから拡張子を除いてベース名を取得
+    base_name = os.path.splitext(preview_name)[0]
+    binary_preview_path = os.path.join(preview_dir, f"{base_name}_binary.jpg")
+    cv2.imwrite(binary_preview_path, binary_bgr)
+    print(f"白黒画像（テスト用）が '{binary_preview_path}' として保存されました。")
 
     # オリジナル画像からトリミング（コントラスト調整は適用しない）
     cropped_image = original_image[y1:y2, x1:x2]
