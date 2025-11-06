@@ -107,64 +107,54 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # for box in merged_boxes:
     #     cv2.rectangle(enhanced_image, (box[0], box[1]), (box[2], box[3]), (0, 0, 255), 2)
     
-    outerbox_height = height
-    top_y = merged_boxes[0][1] if len(merged_boxes) > 0 else margin_area_top
-    if len(merged_boxes)>0:
-        outerbox_height = height - top_y
-    print(f"outerbox_height:{outerbox_height}")
-    top_margin = 80
-    if top_y >= top_margin:
-        outerbox_height += top_margin
+    # 赤矩形（バウンディングボックスのユニオン）の上下の辺を取得
+    if len(merged_boxes) > 0:
+        merged_box = merged_boxes[0]
+        red_top_y = merged_box[1]  # 赤矩形の上辺
+        red_bottom_y = merged_box[3]  # 赤矩形の下辺
     else:
-        outerbox_height = height
-    outerbox_width = outerbox_height * 3 // 4
-    left = (width - outerbox_width)//2
-    top = height - outerbox_height
+        # バウンディングボックスがない場合はマージン領域を使用
+        red_top_y = margin_area_top
+        red_bottom_y = margin_area_bottom
     
-    # マージン領域内で縦横比4:3（縦4横3）を保つようにトリミング領域を計算
-    # マージン領域のサイズを取得
+    # 緑矩形の上下の辺を赤矩形の上下の辺と同一ライン上に揃える
+    y1 = red_top_y
+    y2 = red_bottom_y
+    crop_height = y2 - y1
+    
+    # 縦横比4:3（縦4横3）に合わせて幅を計算（width = height * 3 / 4）
+    crop_width = crop_height * 3 // 4
+    
+    # マージン領域内に収まるように調整
+    # 幅がマージン領域を超える場合は、マージン領域の幅を使用し、高さを再計算
     margin_area_width = margin_area_right - margin_area_left
-    margin_area_height = margin_area_bottom - margin_area_top
-    
-    # 縦横比4:3に合わせる（width = height * 3 / 4）
-    # マージン領域内に収まる最大の4:3の矩形を計算
-    if margin_area_width * 4 <= margin_area_height * 3:
-        # 幅を基準に高さを計算
+    if crop_width > margin_area_width:
         crop_width = margin_area_width
-        crop_height = margin_area_width * 4 // 3
-    else:
-        # 高さを基準に幅を計算
-        crop_height = margin_area_height
-        crop_width = margin_area_height * 3 // 4
-    
-    # 元の計算されたトリミング領域とマージン領域内の最大4:3矩形を比較
-    # より小さい方を選択（ただし、マージン領域内に収まる必要がある）
-    if outerbox_width <= crop_width and outerbox_height <= crop_height:
-        # 元の計算された領域を使用
-        crop_width = outerbox_width
-        crop_height = outerbox_height
-        # マージン領域内に収まるように位置を調整
-        x1 = max(margin_area_left, min(left, margin_area_right - crop_width))
-        y1 = max(margin_area_top, min(top, margin_area_bottom - crop_height))
-    else:
-        # マージン領域内の最大4:3矩形を使用
-        # 中央に配置
-        center_x = (margin_area_left + margin_area_right) // 2
-        center_y = (margin_area_top + margin_area_bottom) // 2
-        x1 = center_x - crop_width // 2
+        crop_height = crop_width * 4 // 3
+        # 高さを調整したので、上下の位置を再計算（中央揃え）
+        center_y = (red_top_y + red_bottom_y) // 2
         y1 = center_y - crop_height // 2
-        # マージン領域内に制限
-        if x1 < margin_area_left:
-            x1 = margin_area_left
-        if x1 + crop_width > margin_area_right:
-            x1 = margin_area_right - crop_width
+        y2 = y1 + crop_height
+        # マージン領域内に収まるように調整
         if y1 < margin_area_top:
             y1 = margin_area_top
-        if y1 + crop_height > margin_area_bottom:
-            y1 = margin_area_bottom - crop_height
+            y2 = y1 + crop_height
+        if y2 > margin_area_bottom:
+            y2 = margin_area_bottom
+            y1 = y2 - crop_height
     
+    # 中央揃えでx座標を計算
+    center_x = (margin_area_left + margin_area_right) // 2
+    x1 = center_x - crop_width // 2
     x2 = x1 + crop_width
-    y2 = y1 + crop_height
+    
+    # マージン領域内に収まるように調整
+    if x1 < margin_area_left:
+        x1 = margin_area_left
+        x2 = x1 + crop_width
+    if x2 > margin_area_right:
+        x2 = margin_area_right
+        x1 = x2 - crop_width
     
     top_left = (x1, y1)
     bottom_right = (x2, y2)
@@ -227,8 +217,8 @@ def process_image(original_image_path, processed_file_path, preview_name):
     cv2.imwrite(preview_file_path, cropped_image)
     print(f"プレビュー画像が '{preview_file_path}' として保存されました。")
     
-    estimated_height = top_y * get_A() + get_B()
+    estimated_height = red_top_y * get_A() + get_B()
     # 5刻みの整数に丸める
     estimated_height = round(estimated_height / 5) * 5
-    return top_y, estimated_height, processed_file_path, preview_file_path, binary_preview_path
+    return red_top_y, estimated_height, processed_file_path, preview_file_path, binary_preview_path
 
