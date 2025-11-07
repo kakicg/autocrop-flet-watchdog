@@ -170,14 +170,16 @@ def main(page: ft.Page):
                 content = f.read().strip()
                 root_folder_name = content[:8]  # 先頭8文字
         else:
-            # day.txtが存在しない場合は現在の日付を使用
-            from datetime import datetime
-            root_folder_name = datetime.now().strftime("%Y%m%d")
+            # day.txtが存在しない場合は100年後の今日の日付を使用
+            from datetime import datetime, timedelta
+            future_date = datetime.now() + timedelta(days=36525)  # 100年後（365.25日 × 100年）
+            root_folder_name = future_date.strftime("%Y%m%d")
     except Exception as e:
         print(f"Error reading day.txt: {e}")
-        # エラー時は現在の日付を使用
-        from datetime import datetime
-        root_folder_name = datetime.now().strftime("%Y%m%d")
+        # エラー時は100年後の今日の日付を使用
+        from datetime import datetime, timedelta
+        future_date = datetime.now() + timedelta(days=36525)  # 100年後（365.25日 × 100年）
+        root_folder_name = future_date.strftime("%Y%m%d")
     
     # root_folderを作成
     root_folder_path = os.path.join(processed_dir, root_folder_name)
