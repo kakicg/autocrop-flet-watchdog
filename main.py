@@ -6,7 +6,7 @@ import os
 import asyncio
 import sys
 import time
-from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings
+from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings, get_TOTAL_SHOTS, get_SHOT_COUNT_START_DATE, reset_TOTAL_SHOTS
 from version import VERSION
 
 # アプリケーション起動時に設定を初期化（新しい項目があれば追加）
@@ -131,6 +131,20 @@ def main(page: ft.Page):
         page.side_bar.set_margin_setting_visible(True)
         page.side_bar.top_message_text.value = "マージン設定モードです。上下左右のマージン幅を変更できます。"
         page.update()
+    
+    def reset_shot_count(event):
+        """累計撮影枚数をリセット"""
+        reset_TOTAL_SHOTS()
+        update_shot_count_display()
+        page.side_bar.top_message_text.value = "累計撮影枚数をリセットしました。"
+        page.update()
+    
+    def update_shot_count_display():
+        """累計撮影枚数の表示を更新"""
+        total_shots = get_TOTAL_SHOTS()
+        start_date = get_SHOT_COUNT_START_DATE()
+        shot_count_text.value = f"累計撮影: {total_shots}枚 (起算日: {start_date})　"
+        page.update()
 
     page.title = f"Auto Crop App v{VERSION}"
     page.theme_mode = ft.ThemeMode.DARK
@@ -189,7 +203,12 @@ def main(page: ft.Page):
     except Exception as e:
         print(f"previewフォルダのクリーンアップエラー: {e}")
     
-    mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
+    mode_text = ft.Text("通常モード", size=12, style=ft.TextStyle(font_family="Noto Sans CJK JP", weight=ft.FontWeight.BOLD))
+    mode_text_container = ft.Container(
+        content=mode_text,
+        margin=ft.margin.only(left=40, right=40)
+    )
+    shot_count_text = ft.Text("", size=10, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
@@ -199,7 +218,8 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.ON_SURFACE_VARIANT,
         color=ft.Colors.BLACK,
         actions=[
-            mode_text,
+            shot_count_text,
+            mode_text_container,
             ft.PopupMenuButton(
                 items=[
                     ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
@@ -210,6 +230,8 @@ def main(page: ft.Page):
                     ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
                     ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
                     ft.PopupMenuItem(text="マージン設定", on_click=open_margin_setting),
+                    ft.PopupMenuItem(),  # divider
+                    ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="システム終了", on_click=terminate),
                 ]
@@ -237,7 +259,10 @@ def main(page: ft.Page):
     page.side_bar = side_bar
     page.main_view = main_view
     page.mode_text = mode_text
+    page.mode_text_container = mode_text_container
+    page.shot_count_text = shot_count_text
     page.update_mode_display = update_mode_display
+    page.update_shot_count_display = update_shot_count_display
 
     layout = ft.Row(
         [main_view, side_bar],
@@ -251,6 +276,7 @@ def main(page: ft.Page):
     
     # 初期モード表示を更新（page.add()の後に実行）
     update_mode_display()
+    update_shot_count_display()
     page.update()
 
 # Fletアプリケーションを実行

@@ -221,4 +221,3 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # 5刻みの整数に丸める
     estimated_height = round(estimated_height / 5) * 5
     return red_top_y, estimated_height, processed_file_path, preview_file_path, binary_preview_path
-

@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from datetime import datetime
 
 def get_settings_path():
     """PyInstaller環境でも正しくsettings.jsonを見つける"""
@@ -75,6 +76,14 @@ def initialize_settings():
             updated = True
         if "MARGIN_RIGHT" not in settings:
             settings["MARGIN_RIGHT"] = 5.0
+            updated = True
+        
+        # 累計撮影枚数と起算日がない場合は初期化
+        if "TOTAL_SHOTS" not in settings:
+            settings["TOTAL_SHOTS"] = 0
+            updated = True
+        if "SHOT_COUNT_START_DATE" not in settings:
+            settings["SHOT_COUNT_START_DATE"] = datetime.now().strftime("%Y-%m-%d")
             updated = True
         
         # 設定が更新された場合はファイルに保存
@@ -184,4 +193,39 @@ def set_MARGIN_RIGHT(value):
     settings = load_settings()
     settings["MARGIN_RIGHT"] = float(value)
     with open(SETTINGS_PATH, "w") as f:
-        json.dump(settings, f, indent=2) 
+        json.dump(settings, f, indent=2)
+
+def get_TOTAL_SHOTS():
+    """累計撮影枚数を取得"""
+    settings = load_settings()
+    if "TOTAL_SHOTS" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("TOTAL_SHOTS", 0)
+
+def increment_TOTAL_SHOTS():
+    """累計撮影枚数を1つ増やす"""
+    settings = load_settings()
+    # 初めて呼び出された場合は起算日を設定
+    if "TOTAL_SHOTS" not in settings or "SHOT_COUNT_START_DATE" not in settings:
+        settings["TOTAL_SHOTS"] = 0
+        settings["SHOT_COUNT_START_DATE"] = datetime.now().strftime("%Y-%m-%d")
+    settings["TOTAL_SHOTS"] = settings.get("TOTAL_SHOTS", 0) + 1
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def reset_TOTAL_SHOTS():
+    """累計撮影枚数をリセットして0に戻し、起算日を更新"""
+    settings = load_settings()
+    settings["TOTAL_SHOTS"] = 0
+    settings["SHOT_COUNT_START_DATE"] = datetime.now().strftime("%Y-%m-%d")
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def get_SHOT_COUNT_START_DATE():
+    """起算日を取得"""
+    settings = load_settings()
+    if "SHOT_COUNT_START_DATE" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("SHOT_COUNT_START_DATE", datetime.now().strftime("%Y-%m-%d")) 

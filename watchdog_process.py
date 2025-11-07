@@ -6,7 +6,7 @@ from image_processing import process_image
 from item_db import ItemInfo, session
 import time
 from datetime import datetime
-from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B
+from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B, increment_TOTAL_SHOTS
 import csv
 from config import get_GAMMA
 
@@ -92,6 +92,14 @@ class ImageHandler(FileSystemEventHandler):
             output_file_path, 
             preview_name
         )
+        
+        # 累計撮影枚数をインクリメント
+        increment_TOTAL_SHOTS()
+        
+        # 累計撮影枚数の表示を更新
+        if hasattr(self.page, 'update_shot_count_display'):
+            self.page.update_shot_count_display()
+        
         new_item = ItemInfo(
             barcode=barcode_number if barcode_number else "unknown",
             barcode_whole=barcode_whole if barcode_whole else None,
