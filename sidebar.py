@@ -19,7 +19,7 @@ class SideBar(ft.Container):
             barcode_whole = event.control.value
             
             # barcode_wholeの長さが5未満の場合、ランダムな40桁の数字を生成
-            if len(barcode_whole) < 5:
+            if len(barcode_whole) < 1:
                 import random
                 barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])
             
@@ -81,23 +81,37 @@ class SideBar(ft.Container):
                     targets = []
                     for idx, ctrl in enumerate(list(grid_view.controls)):
                         if isinstance(ctrl, ft.Container) and hasattr(ctrl, 'content') and isinstance(ctrl.content, ft.Column):
-                            for child in getattr(ctrl.content, 'controls', []):
-                                if isinstance(child, ft.Text) and child.value == barcode_number:
-                                    targets.append(idx)
-                                    break
+                            # image_containerの構造: Column -> [Image, text_container]
+                            # text_containerの構造: Container -> Column -> [Text(バーコード番号), Text, Text, Text]
+                            column_controls = getattr(ctrl.content, 'controls', [])
+                            for child in column_controls:
+                                # text_containerを探す
+                                if isinstance(child, ft.Container) and hasattr(child, 'content') and isinstance(child.content, ft.Column):
+                                    text_column = child.content
+                                    text_controls = getattr(text_column, 'controls', [])
+                                    # 最初のText要素がバーコード番号
+                                    if text_controls and isinstance(text_controls[0], ft.Text) and text_controls[0].value == barcode_number:
+                                        targets.append(idx)
+                                        break
                     for idx in reversed(targets):
                         del grid_view.controls[idx]
                     if targets:
                         grid_view.update()
+                        print(f"Removed {len(targets)} duplicate barcode card(s) for {barcode_number}")
                 except Exception as e:
                     print(f"Error removing duplicated barcode card: {e}")
-                page.update()
-            else:
-                barcode_list.append(barcode_number)
-
+                    import traceback
+                    traceback.print_exc()
                 
-            # 重複でない: 追加してセッション更新
+                # 重複したbarcode_numberを現在の値として設定し、次の画像入力とマッチできるようにする
+                page.session.set("barcode_number", barcode_number)
+                top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
+                top_message_container.content.value = f'[ {barcode_number} ]を撮影中...'
+                page.update()
+                return  # 重複の場合は処理を終了
             
+            # 重複でない: 追加してセッション更新
+            barcode_list.append(barcode_number)
             page.session.set("barcode_list", barcode_list)
             page.session.set("barcode_number", barcode_number)
             event.control.value = ""
