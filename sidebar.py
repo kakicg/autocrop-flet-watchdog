@@ -5,7 +5,7 @@ import colorsys
 import os
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -522,12 +522,68 @@ class SideBar(ft.Container):
             ], alignment=ft.MainAxisAlignment.END, spacing=5)
         ], spacing=10, visible=False)
         
+        # --- Aspect Ratio settings UI ---
+        aspect_ratio_label = ft.Text(
+            "縦横比設定",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        
+        # 現在の縦横比を取得
+        current_aspect_ratio = get_ASPECT_RATIO()
+        
+        # ラジオボタンで縦横比を選択
+        aspect_ratio_4_3 = ft.Radio(
+            value="4:3",
+            label="4:3（縦4横3）",
+        )
+        aspect_ratio_3_2 = ft.Radio(
+            value="3:2",
+            label="3:2（縦3横2）",
+        )
+        aspect_ratio_1_1 = ft.Radio(
+            value="1:1",
+            label="1:1（正方形）",
+        )
+        
+        def on_aspect_ratio_change(e):
+            new_ratio = e.control.value
+            set_ASPECT_RATIO(new_ratio)
+            page.snack_bar = ft.SnackBar(ft.Text(f"縦横比を{new_ratio}に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        
+        aspect_ratio_group = ft.RadioGroup(
+            content=ft.Column([
+                aspect_ratio_4_3,
+                aspect_ratio_3_2,
+                aspect_ratio_1_1,
+            ], spacing=5),
+            value=current_aspect_ratio,
+            on_change=on_aspect_ratio_change,
+        )
+        
+        def update_aspect_ratio_setting(event):
+            self.set_aspect_ratio_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        aspect_ratio_cancel_button = ft.ElevatedButton("閉じる", on_click=update_aspect_ratio_setting)
+        
+        aspect_ratio_row = ft.Column([
+            aspect_ratio_label,
+            aspect_ratio_group,
+            ft.Row([
+                aspect_ratio_cancel_button
+            ], alignment=ft.MainAxisAlignment.END, spacing=5)
+        ], spacing=10, visible=False)
+        
         dir_settings_column = ft.Column([
             processed_dir_row,
             watch_dir_row,
             preview_dir_row,
             gamma_row,
             margin_row,
+            aspect_ratio_row,
         ], spacing=5)
         
         self.content = ft.Column(
@@ -552,6 +608,8 @@ class SideBar(ft.Container):
         self.margin_bottom_value_text = margin_bottom_value_text
         self.margin_left_value_text = margin_left_value_text
         self.margin_right_value_text = margin_right_value_text
+        self.aspect_ratio_row = aspect_ratio_row
+        self.aspect_ratio_group = aspect_ratio_group
         self.processed_dir_picker = processed_dir_picker
         self.watch_dir_picker = watch_dir_picker
         self.barcode_textfield = barcode_textfield
@@ -603,6 +661,14 @@ class SideBar(ft.Container):
             self.margin_left_value_text.update()
             self.margin_right_value_text.update()
         self.margin_row.update()
+    
+    def set_aspect_ratio_setting_visible(self, visible: bool):
+        self.aspect_ratio_row.visible = visible
+        if visible:
+            # 表示時に現在の値を反映
+            current_aspect_ratio = get_ASPECT_RATIO()
+            self.aspect_ratio_group.value = current_aspect_ratio
+        self.aspect_ratio_row.update()
 
 def reprocess_image_with_barcode(page, image_data, barcode_whole):
     """バーコード未入力画像の再処理"""

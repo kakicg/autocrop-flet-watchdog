@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT
+from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, get_ASPECT_RATIO
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
@@ -122,15 +122,35 @@ def process_image(original_image_path, processed_file_path, preview_name):
     y2 = red_bottom_y
     crop_height = y2 - y1
     
-    # 縦横比4:3（縦4横3）に合わせて幅を計算（width = height * 3 / 4）
-    crop_width = crop_height * 3 // 4
+    # 縦横比設定を取得
+    aspect_ratio = get_ASPECT_RATIO()
+    if aspect_ratio == "4:3":
+        # 縦横比4:3（縦4横3）に合わせて幅を計算（width = height * 3 / 4）
+        crop_width = crop_height * 3 // 4
+        aspect_height_ratio = 4
+        aspect_width_ratio = 3
+    elif aspect_ratio == "3:2":
+        # 縦横比3:2（縦3横2）に合わせて幅を計算（width = height * 2 / 3）
+        crop_width = crop_height * 2 // 3
+        aspect_height_ratio = 3
+        aspect_width_ratio = 2
+    elif aspect_ratio == "1:1":
+        # 縦横比1:1（正方形）に合わせて幅を計算（width = height）
+        crop_width = crop_height
+        aspect_height_ratio = 1
+        aspect_width_ratio = 1
+    else:
+        # デフォルトは4:3
+        crop_width = crop_height * 3 // 4
+        aspect_height_ratio = 4
+        aspect_width_ratio = 3
     
     # マージン領域内に収まるように調整
     # 幅がマージン領域を超える場合は、マージン領域の幅を使用し、高さを再計算
     margin_area_width = margin_area_right - margin_area_left
     if crop_width > margin_area_width:
         crop_width = margin_area_width
-        crop_height = crop_width * 4 // 3
+        crop_height = crop_width * aspect_height_ratio // aspect_width_ratio
         # 高さを調整したので、上下の位置を再計算（中央揃え）
         center_y = (red_top_y + red_bottom_y) // 2
         y1 = center_y - crop_height // 2

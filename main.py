@@ -89,6 +89,7 @@ def main(page: ft.Page):
         page.side_bar.set_preview_dir_setting_visible(False)
         page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.set_margin_setting_visible(False)
+        page.side_bar.set_aspect_ratio_setting_visible(False)
         page.side_bar.top_message_text.value = "保存先ディレクトリ設定モードです。設定後は再起動してください。"
         page.update()
 
@@ -99,6 +100,7 @@ def main(page: ft.Page):
         page.side_bar.set_preview_dir_setting_visible(False)
         page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.set_margin_setting_visible(False)
+        page.side_bar.set_aspect_ratio_setting_visible(False)
         page.side_bar.top_message_text.value = "監視フォルダ設定モードです。設定後は再起動してください。"
         page.update()
     
@@ -109,6 +111,7 @@ def main(page: ft.Page):
         page.side_bar.set_preview_dir_setting_visible(True)
         page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.set_margin_setting_visible(False)
+        page.side_bar.set_aspect_ratio_setting_visible(False)
         page.side_bar.top_message_text.value = "プレビューフォルダー設定モードです。設定後は再起動してください。"
         page.update()
     
@@ -119,6 +122,7 @@ def main(page: ft.Page):
         page.side_bar.set_preview_dir_setting_visible(False)
         page.side_bar.set_gamma_setting_visible(True)
         page.side_bar.set_margin_setting_visible(False)
+        page.side_bar.set_aspect_ratio_setting_visible(False)
         page.side_bar.top_message_text.value = "GAMMA設定モードです。スライダーでコントラスト調整値を変更できます。"
         page.update()
     
@@ -129,7 +133,19 @@ def main(page: ft.Page):
         page.side_bar.set_preview_dir_setting_visible(False)
         page.side_bar.set_gamma_setting_visible(False)
         page.side_bar.set_margin_setting_visible(True)
+        page.side_bar.set_aspect_ratio_setting_visible(False)
         page.side_bar.top_message_text.value = "マージン設定モードです。上下左右のマージン幅を変更できます。"
+        page.update()
+    
+    def open_aspect_ratio_setting(event):
+        page.side_bar.set_barcode_field_visible(False)
+        page.side_bar.set_processed_dir_setting_visible(False)
+        page.side_bar.set_watch_dir_setting_visible(False)
+        page.side_bar.set_preview_dir_setting_visible(False)
+        page.side_bar.set_gamma_setting_visible(False)
+        page.side_bar.set_margin_setting_visible(False)
+        page.side_bar.set_aspect_ratio_setting_visible(True)
+        page.side_bar.top_message_text.value = "縦横比設定モードです。4:3、3:2、1:1から選択できます。"
         page.update()
     
     def reset_shot_count(event):
@@ -232,6 +248,7 @@ def main(page: ft.Page):
                     ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
                     ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
                     ft.PopupMenuItem(text="マージン設定", on_click=open_margin_setting),
+                    ft.PopupMenuItem(text="縦横比設定", on_click=open_aspect_ratio_setting),
                     ft.PopupMenuItem(),  # divider
                     ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
                     ft.PopupMenuItem(),  # divider

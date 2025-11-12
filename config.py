@@ -86,6 +86,11 @@ def initialize_settings():
             settings["SHOT_COUNT_START_DATE"] = datetime.now().strftime("%Y-%m-%d")
             updated = True
         
+        # 縦横比設定がない場合はデフォルト値"4:3"を追加
+        if "ASPECT_RATIO" not in settings:
+            settings["ASPECT_RATIO"] = "4:3"
+            updated = True
+        
         # 設定が更新された場合はファイルに保存
         if updated:
             with open(SETTINGS_PATH, "w") as f:
@@ -228,4 +233,21 @@ def get_SHOT_COUNT_START_DATE():
     if "SHOT_COUNT_START_DATE" not in settings:
         initialize_settings()
         settings = load_settings()
-    return settings.get("SHOT_COUNT_START_DATE", datetime.now().strftime("%Y-%m-%d")) 
+    return settings.get("SHOT_COUNT_START_DATE", datetime.now().strftime("%Y-%m-%d"))
+
+def get_ASPECT_RATIO():
+    """縦横比を取得（"4:3"、"3:2"または"1:1"）"""
+    settings = load_settings()
+    if "ASPECT_RATIO" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("ASPECT_RATIO", "4:3")
+
+def set_ASPECT_RATIO(ratio):
+    """縦横比を設定（"4:3"、"3:2"または"1:1"）"""
+    if ratio not in ["4:3", "3:2", "1:1"]:
+        raise ValueError("縦横比は'4:3'、'3:2'または'1:1'である必要があります")
+    settings = load_settings()
+    settings["ASPECT_RATIO"] = ratio
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2) 
