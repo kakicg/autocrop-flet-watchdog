@@ -91,6 +91,11 @@ def initialize_settings():
             settings["ASPECT_RATIO"] = "4:3"
             updated = True
         
+        # メニューバーの表示設定がない場合はデフォルト値True（表示）を追加
+        if "MENU_BAR_VISIBLE" not in settings:
+            settings["MENU_BAR_VISIBLE"] = True
+            updated = True
+        
         # 設定が更新された場合はファイルに保存
         if updated:
             with open(SETTINGS_PATH, "w") as f:
@@ -250,4 +255,12 @@ def set_ASPECT_RATIO(ratio):
     settings = load_settings()
     settings["ASPECT_RATIO"] = ratio
     with open(SETTINGS_PATH, "w") as f:
-        json.dump(settings, f, indent=2) 
+        json.dump(settings, f, indent=2)
+
+def get_MENU_BAR_VISIBLE():
+    """メニューバーの表示設定を取得（True: 表示、False: 非表示）"""
+    settings = load_settings()
+    if "MENU_BAR_VISIBLE" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("MENU_BAR_VISIBLE", True) 

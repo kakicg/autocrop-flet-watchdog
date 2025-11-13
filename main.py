@@ -6,7 +6,7 @@ import os
 import asyncio
 import sys
 import time
-from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings, get_TOTAL_SHOTS, get_SHOT_COUNT_START_DATE, reset_TOTAL_SHOTS
+from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings, get_TOTAL_SHOTS, get_SHOT_COUNT_START_DATE, reset_TOTAL_SHOTS, get_MENU_BAR_VISIBLE
 from version import VERSION
 
 # アプリケーション起動時に設定を初期化（新しい項目があれば追加）
@@ -228,6 +228,29 @@ def main(page: ft.Page):
     )
     shot_count_text = ft.Text("", size=10, style=ft.TextStyle(font_family="Noto Sans CJK JP"))
     
+    # メニューバーの表示設定を取得
+    menu_bar_visible = get_MENU_BAR_VISIBLE()
+    
+    # PopupMenuButtonを作成（設定に基づいて表示/非表示を制御）
+    popup_menu_button = ft.PopupMenuButton(
+        items=[
+            ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
+            ft.PopupMenuItem(text="テストモード切り替え", on_click=toggle_test_mode),
+            ft.PopupMenuItem(),  # divider
+            ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
+            ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
+            ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
+            ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
+            ft.PopupMenuItem(text="マージン設定", on_click=open_margin_setting),
+            ft.PopupMenuItem(text="縦横比設定", on_click=open_aspect_ratio_setting),
+            ft.PopupMenuItem(),  # divider
+            ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
+            ft.PopupMenuItem(),  # divider
+            ft.PopupMenuItem(text="システム終了", on_click=terminate),
+        ],
+        visible=menu_bar_visible
+    )
+    
     page.appbar = ft.AppBar(
         leading=ft.Icon(ft.Icons.PHOTO_CAMERA_OUTLINED),
         leading_width=40,
@@ -238,23 +261,7 @@ def main(page: ft.Page):
         actions=[
             shot_count_text,
             mode_text_container,
-            ft.PopupMenuButton(
-                items=[
-                    ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
-                    ft.PopupMenuItem(text="テストモード切り替え", on_click=toggle_test_mode),
-                    ft.PopupMenuItem(),  # divider
-                    ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
-                    ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
-                    ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
-                    ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
-                    ft.PopupMenuItem(text="マージン設定", on_click=open_margin_setting),
-                    ft.PopupMenuItem(text="縦横比設定", on_click=open_aspect_ratio_setting),
-                    ft.PopupMenuItem(),  # divider
-                    ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
-                    ft.PopupMenuItem(),  # divider
-                    ft.PopupMenuItem(text="システム終了", on_click=terminate),
-                ]
-            ),
+            popup_menu_button,
         ],
     )
     main_view = ft.GridView(
