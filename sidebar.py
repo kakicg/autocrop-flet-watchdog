@@ -765,6 +765,25 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
                 '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
         
+        # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
+        root_folder_path = page.session.get("root_folder_path")
+        if root_folder_path:
+            root_folder_name = os.path.basename(root_folder_path)
+            parent_csv_path = os.path.join(root_folder_path, f"{root_folder_name}.csv")
+            parent_file_exists = os.path.exists(parent_csv_path)
+            
+            with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
+                parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
+                
+                if not parent_file_exists:
+                    parent_writer.writeheader()
+                
+                parent_writer.writerow({
+                    'バーコード': barcode_whole,
+                    '高さ': image_data['estimated_height'],
+                    '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                })
+        
         # データベースを更新
         new_item = ItemInfo(
             barcode=barcode_number,

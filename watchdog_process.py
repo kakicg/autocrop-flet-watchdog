@@ -134,6 +134,29 @@ class ImageHandler(FileSystemEventHandler):
                     })
                 
                 print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
+                
+                # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
+                root_folder_path = self.page.session.get("root_folder_path")
+                if root_folder_path:
+                    root_folder_name = os.path.basename(root_folder_path)
+                    parent_csv_path = os.path.join(root_folder_path, f"{root_folder_name}.csv")
+                    parent_file_exists = os.path.exists(parent_csv_path)
+                    
+                    with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
+                        parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
+                        
+                        # ファイルが新規作成の場合はヘッダーを書き込み
+                        if not parent_file_exists:
+                            parent_writer.writeheader()
+                        
+                        # データを書き込み
+                        parent_writer.writerow({
+                            'バーコード': barcode_whole if barcode_whole else 'unknown',
+                            '高さ': estimated_height,
+                            '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        })
+                    
+                    print(f"CSVデータが親ディレクトリ '{parent_csv_path}' にも書き込まれました。")
             except Exception as e:
                 print(f"CSV書き込みエラー: {e}")
 
