@@ -5,7 +5,7 @@ import colorsys
 import os
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -17,8 +17,29 @@ class SideBar(ft.Container):
         def set_item(event):
             # barcode_wholeとしてセット
             barcode_whole = event.control.value
-            
-            # barcode_wholeの長さが5未満の場合、ランダムな40桁の数字を生成
+            if barcode_whole == "m":
+                # メニューバーの表示/非表示を切り替え
+                current_visible = get_MENU_BAR_VISIBLE()
+                new_visible = not current_visible
+                set_MENU_BAR_VISIBLE(new_visible)
+                
+                # メニューバーの表示状態を更新
+                if hasattr(page, 'popup_menu_button'):
+                    page.popup_menu_button.visible = new_visible
+                    page.popup_menu_button.update()
+                
+                # メッセージを表示
+                if new_visible:
+                    top_message_container.border = ft.border.all(6, ft.Colors.GREEN_100)
+                    top_message_container.content.value = "メニューバーを表示しました"
+                else:
+                    top_message_container.border = ft.border.all(6, ft.Colors.YELLOW_100)
+                    top_message_container.content.value = "メニューバーを非表示にしました"
+                
+                event.control.value = ""
+                page.update()
+                return    
+            # barcode_wholeの長さが0の場合、ランダムな40桁の数字を生成
             if len(barcode_whole) < 1:
                 import random
                 barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])

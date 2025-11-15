@@ -159,7 +159,7 @@ def main(page: ft.Page):
         """累計撮影枚数の表示を更新"""
         total_shots = get_TOTAL_SHOTS()
         start_date = get_SHOT_COUNT_START_DATE()
-        shot_count_text.value = f"累計撮影: {total_shots}枚 (起算日: {start_date})　"
+        shot_count_text.value = f"累計撮影: {total_shots}枚 (起算日: {start_date})"
         page.update()
 
     page.title = f"Auto Crop App v{VERSION}"
@@ -289,6 +289,7 @@ def main(page: ft.Page):
     page.shot_count_text = shot_count_text
     page.update_mode_display = update_mode_display
     page.update_shot_count_display = update_shot_count_display
+    page.popup_menu_button = popup_menu_button
 
     layout = ft.Row(
         [main_view, side_bar],

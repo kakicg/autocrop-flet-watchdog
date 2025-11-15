@@ -263,4 +263,11 @@ def get_MENU_BAR_VISIBLE():
     if "MENU_BAR_VISIBLE" not in settings:
         initialize_settings()
         settings = load_settings()
-    return settings.get("MENU_BAR_VISIBLE", True) 
+    return settings.get("MENU_BAR_VISIBLE", True)
+
+def set_MENU_BAR_VISIBLE(visible):
+    """メニューバーの表示設定を設定（True: 表示、False: 非表示）"""
+    settings = load_settings()
+    settings["MENU_BAR_VISIBLE"] = bool(visible)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2) 
