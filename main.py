@@ -234,12 +234,13 @@ def main(page: ft.Page):
     # PopupMenuButtonを作成（設定に基づいて表示/非表示を制御）
     popup_menu_button = ft.PopupMenuButton(
         items=[
-            ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
             ft.PopupMenuItem(text="テストモード切り替え", on_click=toggle_test_mode),
+            ft.PopupMenuItem(text="実測値入力モード", on_click=change_mode),
             ft.PopupMenuItem(),  # divider
             ft.PopupMenuItem(text="監視フォルダーの設定", on_click=open_watch_dir_setting),
             ft.PopupMenuItem(text="書き込みフォルダーの設定", on_click=open_processed_dir_setting),
             ft.PopupMenuItem(text="プレビューフォルダーの設定", on_click=open_preview_dir_setting),
+            ft.PopupMenuItem(),  # divider
             ft.PopupMenuItem(text="GAMMA設定（コントラスト調整）", on_click=open_gamma_setting),
             ft.PopupMenuItem(text="マージン設定", on_click=open_margin_setting),
             ft.PopupMenuItem(text="縦横比設定", on_click=open_aspect_ratio_setting),
