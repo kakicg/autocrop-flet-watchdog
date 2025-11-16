@@ -10,7 +10,7 @@ echo クリーンアップ完了
 
 echo.
 echo 2. PyInstallerでアプリをビルド中...
-python -m PyInstaller --name "AutoCrop" --onedir --windowed --add-data "product_data.db;." --add-data "settings.json;." --add-data "preview;preview" --add-data "processed;processed" --add-data "watch_folder;watch_folder" --add-data "storage;storage" --add-data "barcode.jpg;." --hidden-import flet --hidden-import sqlalchemy --hidden-import watchdog --hidden-import cv2 --hidden-import numpy --collect-all flet --collect-all sqlalchemy --collect-all watchdog main.py --clean -y
+python -m PyInstaller --name "AutoCrop" --onedir --windowed --add-data "product_data.db;." --add-data "settings.json;." --add-data "MENU_MANUAL.md;." --add-data "preview;preview" --add-data "processed;processed" --add-data "watch_folder;watch_folder" --add-data "storage;storage" --add-data "barcode.jpg;." --hidden-import flet --hidden-import sqlalchemy --hidden-import watchdog --hidden-import cv2 --hidden-import numpy --collect-all flet --collect-all sqlalchemy --collect-all watchdog main.py --clean -y
 
 if %ERRORLEVEL% neq 0 (
     echo ビルドに失敗しました。エラーを確認してください。

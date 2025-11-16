@@ -3,6 +3,7 @@ import time
 import random
 import colorsys
 import os
+import sys
 import csv
 from sqlalchemy.orm import declarative_base
 from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
@@ -64,7 +65,28 @@ class SideBar(ft.Container):
                 manual_row.update()
                 event.control.value = ""
                 page.update()
-                return    
+                return
+            if barcode_whole == "t":
+                # テストモードの切り替え
+                current_test_mode = page.session.get('test_mode') or False
+                new_test_mode = not current_test_mode
+                
+                page.session.set('test_mode', new_test_mode)
+                
+                if new_test_mode:
+                    top_message_container.border = ft.border.all(6, ft.Colors.GREEN_100)
+                    top_message_container.content.value = "テストモード: 白黒画像を表示します"
+                else:
+                    top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
+                    top_message_container.content.value = "バーコード自動入力"
+                
+                # モード表示を更新
+                if hasattr(page, 'update_mode_display'):
+                    page.update_mode_display()
+                
+                event.control.value = ""
+                page.update()
+                return
             # barcode_wholeの長さが0の場合、ランダムな40桁の数字を生成
             if len(barcode_whole) < 1:
                 import random
@@ -625,17 +647,33 @@ class SideBar(ft.Container):
         ], spacing=10, visible=False)
         
         # --- Manual display UI ---
+        def get_manual_path():
+            """PyInstaller環境でも正しくMENU_MANUAL.mdを見つける"""
+            if getattr(sys, 'frozen', False):
+                # PyInstaller環境の場合
+                base_path = sys._MEIPASS
+                manual_path = os.path.join(base_path, "MENU_MANUAL.md")
+                if os.path.exists(manual_path):
+                    return manual_path
+                # メインディレクトリも確認
+                main_dir = os.path.dirname(sys.executable)
+                manual_path = os.path.join(main_dir, "MENU_MANUAL.md")
+                if os.path.exists(manual_path):
+                    return manual_path
+            # 通常のPython環境の場合
+            return os.path.join(os.path.dirname(__file__), "MENU_MANUAL.md")
+        
         def load_manual_content():
             """MENU_MANUAL.mdの内容を読み込む"""
-            manual_path = os.path.join(os.path.dirname(__file__), "MENU_MANUAL.md")
+            manual_path = get_manual_path()
             try:
                 if os.path.exists(manual_path):
                     with open(manual_path, 'r', encoding='utf-8') as f:
                         return f.read()
                 else:
-                    return "マニュアルファイルが見つかりません。"
+                    return f"マニュアルファイルが見つかりません。\nパス: {manual_path}"
             except Exception as e:
-                return f"マニュアルの読み込みエラー: {e}"
+                return f"マニュアルの読み込みエラー: {e}\nパス: {manual_path}"
         
         manual_content_text = ft.Text(
             value=load_manual_content(),
