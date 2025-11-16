@@ -648,20 +648,51 @@ class SideBar(ft.Container):
         
         # --- Manual display UI ---
         def get_manual_path():
-            """PyInstaller環境でも正しくMENU_MANUAL.mdを見つける"""
+            """PyInstaller/flet pack環境でも正しくMENU_MANUAL.mdを見つける"""
+            checked_paths = []
+            
+            # パッケージ化された環境の場合
             if getattr(sys, 'frozen', False):
-                # PyInstaller環境の場合
-                base_path = sys._MEIPASS
-                manual_path = os.path.join(base_path, "MENU_MANUAL.md")
-                if os.path.exists(manual_path):
-                    return manual_path
-                # メインディレクトリも確認
-                main_dir = os.path.dirname(sys.executable)
-                manual_path = os.path.join(main_dir, "MENU_MANUAL.md")
-                if os.path.exists(manual_path):
-                    return manual_path
+                # 1. _MEIPASS（一時展開ディレクトリ）を確認
+                if hasattr(sys, '_MEIPASS'):
+                    base_path = sys._MEIPASS
+                    manual_path = os.path.join(base_path, "MENU_MANUAL.md")
+                    checked_paths.append(manual_path)
+                    if os.path.exists(manual_path):
+                        return manual_path
+                
+                # 2. 実行ファイルと同じディレクトリを確認
+                if hasattr(sys, 'executable'):
+                    main_dir = os.path.dirname(sys.executable)
+                    manual_path = os.path.join(main_dir, "MENU_MANUAL.md")
+                    checked_paths.append(manual_path)
+                    if os.path.exists(manual_path):
+                        return manual_path
+                    
+                    # 実行ファイルのディレクトリ内の様々な場所も確認
+                    for subdir in ["", "_internal", "lib"]:
+                        check_path = os.path.join(main_dir, subdir, "MENU_MANUAL.md")
+                        checked_paths.append(check_path)
+                        if os.path.exists(check_path):
+                            return check_path
+            
             # 通常のPython環境の場合
-            return os.path.join(os.path.dirname(__file__), "MENU_MANUAL.md")
+            # 現在のスクリプトのディレクトリを確認
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            manual_path = os.path.join(script_dir, "MENU_MANUAL.md")
+            checked_paths.append(manual_path)
+            if os.path.exists(manual_path):
+                return manual_path
+            
+            # カレントディレクトリも確認
+            current_dir = os.getcwd()
+            manual_path = os.path.join(current_dir, "MENU_MANUAL.md")
+            checked_paths.append(manual_path)
+            if os.path.exists(manual_path):
+                return manual_path
+            
+            # 見つからない場合は最後に試したパスを返す（デバッグ情報付き）
+            return manual_path
         
         def load_manual_content():
             """MENU_MANUAL.mdの内容を読み込む"""
@@ -671,7 +702,19 @@ class SideBar(ft.Container):
                     with open(manual_path, 'r', encoding='utf-8') as f:
                         return f.read()
                 else:
-                    return f"マニュアルファイルが見つかりません。\nパス: {manual_path}"
+                    # デバッグ情報を追加
+                    debug_info = f"マニュアルファイルが見つかりません。\nパス: {manual_path}\n"
+                    if getattr(sys, 'frozen', False):
+                        debug_info += f"frozen: True\n"
+                        if hasattr(sys, '_MEIPASS'):
+                            debug_info += f"_MEIPASS: {sys._MEIPASS}\n"
+                        if hasattr(sys, 'executable'):
+                            debug_info += f"executable: {sys.executable}\n"
+                            debug_info += f"executable dir: {os.path.dirname(sys.executable)}\n"
+                    else:
+                        debug_info += f"frozen: False\n"
+                        debug_info += f"script dir: {os.path.dirname(os.path.abspath(__file__))}\n"
+                    return debug_info
             except Exception as e:
                 return f"マニュアルの読み込みエラー: {e}\nパス: {manual_path}"
         
