@@ -50,28 +50,36 @@ class ImageHandler(FileSystemEventHandler):
             self.page.side_bar.top_message_text.value = f"{barcode_number}の撮影完了"
         else:
             processed_name = preview_name
-            self.page.side_bar.top_message_text.value = f"{preview_name}に対応するバーコードが未入力"
-            # --- SideBarのmiddle_listsに未入力の表示を追加（赤地・白文字） ---
-            if hasattr(self.page, 'side_bar') and hasattr(self.page.side_bar, 'middle_lists'):
-                try:
-                    self.page.side_bar.middle_lists.insert(
-                        0,
-                        ft.Container(
-                            content=ft.Text(
-                                f"バーコード未入力（{preview_name}）",
-                                color=ft.Colors.WHITE,
+            # 実測値モードの時はバーコード未入力のエラーを表示しない
+            if current_mode != "real_height_mode":
+                self.page.side_bar.top_message_text.value = f"{preview_name}に対応するバーコードが未入力"
+                # --- SideBarのmiddle_listsに未入力の表示を追加（赤地・白文字） ---
+                if hasattr(self.page, 'side_bar') and hasattr(self.page.side_bar, 'middle_lists'):
+                    try:
+                        self.page.side_bar.middle_lists.insert(
+                            0,
+                            ft.Container(
+                                content=ft.Text(
+                                    f"バーコード未入力（{preview_name}）",
+                                    color=ft.Colors.WHITE,
+                                ),
+                                bgcolor=ft.Colors.RED,
+                                expand=True,
+                                margin=8,
+                                padding=8,
                             ),
-                            bgcolor=ft.Colors.RED,
-                            expand=True,
-                            margin=8,
-                            padding=8,
-                        ),
-                    )
-                    self.page.update()
-                except Exception as e:
-                    print(f"Error adding 'バーコード未入力' to sidebar: {e}")
+                        )
+                        self.page.update()
+                    except Exception as e:
+                        print(f"Error adding 'バーコード未入力' to sidebar: {e}")
 
         real_height = self.page.session.get('real_height')
+        # real_heightが文字列の場合は数値に変換
+        if real_height is not None:
+            try:
+                real_height = float(real_height)
+            except (ValueError, TypeError):
+                real_height = None
         session_processed_dir = self.page.session.get('processed_dir')
 
         root_folder_path = self.page.session.get("root_folder_path")
@@ -87,11 +95,35 @@ class ImageHandler(FileSystemEventHandler):
         
         output_file_path = os.path.join(barcode_folder_path, processed_name)
 
-        top_y, estimated_height, processed_path, preview_path, test_path = process_image(
-            image_path, 
-            output_file_path, 
-            preview_name
-        )
+        # 実測値モードの時はトリミングを行わず、オリジナル画像をそのままコピー
+        if current_mode == "real_height_mode":
+            import shutil
+            import cv2
+            from config import get_PREVIEW_DIR
+            
+            # オリジナル画像をそのままコピー（トリミングなし）
+            shutil.copy2(image_path, output_file_path)
+            processed_path = output_file_path
+            
+            # previewフォルダにもコピー
+            preview_dir = get_PREVIEW_DIR()
+            os.makedirs(preview_dir, exist_ok=True)
+            preview_path = os.path.join(preview_dir, preview_name)
+            shutil.copy2(image_path, preview_path)
+            
+            # テスト用白黒画像は作成しない（Noneを返す）
+            test_path = None
+            
+            # 実測値モードではtop_yとestimated_heightは使用しない
+            top_y = None
+            # 推定値には手動で入力した実測値を使用（cm単位をmm単位に変換）
+            estimated_height = int(real_height * 10) if real_height is not None else 0
+        else:
+            top_y, estimated_height, processed_path, preview_path, test_path = process_image(
+                image_path, 
+                output_file_path, 
+                preview_name
+            )
         
         # 累計撮影枚数をインクリメント
         increment_TOTAL_SHOTS()
@@ -177,7 +209,7 @@ class ImageHandler(FileSystemEventHandler):
         # 画像の絶対パスを取得
         abs_processed_path = os.path.abspath(processed_path)
         abs_preview_path = os.path.abspath(preview_path)
-        abs_test_path = os.path.abspath(test_path)
+        abs_test_path = os.path.abspath(test_path) if test_path else None
 
 
         # オリジナル画像を削除
@@ -189,16 +221,23 @@ class ImageHandler(FileSystemEventHandler):
         # 現在のタイムスタンプを取得
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # ラベル表示用のテキストと色（バーコード未入力時は赤字）
-        label_text = barcode_number if barcode_number else f"バーコード未入力"
-        label_color = ft.Colors.WHITE if barcode_number else ft.Colors.RED
+        # ラベル表示用のテキストと色（バーコード未入力時は赤字、実測値モードの時は表示しない）
+        if current_mode == "real_height_mode":
+            label_text = "実測値入力"
+            label_color = ft.Colors.WHITE
+        else:
+            label_text = barcode_number if barcode_number else f"バーコード未入力"
+            label_color = ft.Colors.WHITE if barcode_number else ft.Colors.RED
         
         # クリックハンドラーを定義
         def on_image_container_click(event):
+            # 実測値モードの時はクリック不可
+            if current_mode == "real_height_mode":
+                return
             if not barcode_number:  # バーコード未入力の場合のみ
-                current_mode = self.page.session.get('pending_mode') or False
+                pending_mode = self.page.session.get('pending_mode') or False
                 
-                if not current_mode:
+                if not pending_mode:
                     # バーコード入力モードに切り替え
                     self.page.session.set('pending_mode', True)
                     # 対象画像データを保存
@@ -326,19 +365,20 @@ class ImageHandler(FileSystemEventHandler):
                         border_radius=10,
                         margin=5,
                         height=450,
-                        on_click=on_image_container_click if not barcode_number else None,  # バーコード未入力の場合のみクリック可能
+                        on_click=on_image_container_click if (not barcode_number and current_mode != "real_height_mode") else None,  # バーコード未入力の場合のみクリック可能（実測値モードの時は不可）
                     )
                 
         # image_container = create_image_container(abs_preview_path, text_container)
         image_container = create_image_container(abs_preview_path, text_container)
-        test_image_container = create_image_container(abs_test_path, test_text_container)
+        # テスト用画像は実測値モードの時は作成しない
+        test_image_container = create_image_container(abs_test_path, test_text_container) if abs_test_path else None
 
         try:
             # メインビューのコントロールに追加
             
             grid_view = self.view_controls[0]
 
-            if self.page.session.get('test_mode'):
+            if self.page.session.get('test_mode') and test_image_container:
                 grid_view.controls.insert(0, test_image_container)
 
             grid_view.controls.insert(0, image_container)
