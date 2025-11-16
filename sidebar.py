@@ -38,6 +38,32 @@ class SideBar(ft.Container):
                 
                 event.control.value = ""
                 page.update()
+                return
+            if barcode_whole == "h":
+                # マニュアルの表示/非表示を切り替え
+                current_visible = manual_row.visible
+                new_visible = not current_visible
+                manual_row.visible = new_visible
+                
+                # 他の設定画面を非表示にする
+                if new_visible:
+                    self.set_barcode_field_visible(False)
+                    self.set_processed_dir_setting_visible(False)
+                    self.set_watch_dir_setting_visible(False)
+                    self.set_preview_dir_setting_visible(False)
+                    self.set_gamma_setting_visible(False)
+                    self.set_margin_setting_visible(False)
+                    self.set_aspect_ratio_setting_visible(False)
+                    top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
+                    top_message_container.content.value = "操作マニュアルを表示中"
+                else:
+                    self.set_barcode_field_visible(True)
+                    top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
+                    top_message_container.content.value = "バーコード自動入力"
+                
+                manual_row.update()
+                event.control.value = ""
+                page.update()
                 return    
             # barcode_wholeの長さが0の場合、ランダムな40桁の数字を生成
             if len(barcode_whole) < 1:
@@ -598,6 +624,55 @@ class SideBar(ft.Container):
             ], alignment=ft.MainAxisAlignment.END, spacing=5)
         ], spacing=10, visible=False)
         
+        # --- Manual display UI ---
+        def load_manual_content():
+            """MENU_MANUAL.mdの内容を読み込む"""
+            manual_path = os.path.join(os.path.dirname(__file__), "MENU_MANUAL.md")
+            try:
+                if os.path.exists(manual_path):
+                    with open(manual_path, 'r', encoding='utf-8') as f:
+                        return f.read()
+                else:
+                    return "マニュアルファイルが見つかりません。"
+            except Exception as e:
+                return f"マニュアルの読み込みエラー: {e}"
+        
+        manual_content_text = ft.Text(
+            value=load_manual_content(),
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=10,
+            selectable=True,
+            width=280,
+        )
+        manual_scroll_view = ft.Container(
+            content=ft.ListView(
+                controls=[manual_content_text],
+                expand=True,
+            ),
+            expand=True,
+            width=280,
+            height=500,
+        )
+        def close_manual(event):
+            manual_row.visible = False
+            self.set_barcode_field_visible(True)
+            top_message_container.border = ft.border.all(6, ft.Colors.PINK_100)
+            top_message_container.content.value = "バーコード自動入力"
+            manual_row.update()
+            page.update()
+        manual_close_button = ft.ElevatedButton("閉じる", on_click=close_manual)
+        manual_row = ft.Column([
+            ft.Text(
+                "操作マニュアル",
+                style=ft.TextStyle(font_family="Noto Sans CJK JP", weight=ft.FontWeight.BOLD),
+                size=14,
+            ),
+            manual_scroll_view,
+            ft.Row([
+                manual_close_button
+            ], alignment=ft.MainAxisAlignment.END, spacing=5)
+        ], spacing=10, visible=False)
+        
         dir_settings_column = ft.Column([
             processed_dir_row,
             watch_dir_row,
@@ -605,6 +680,7 @@ class SideBar(ft.Container):
             gamma_row,
             margin_row,
             aspect_ratio_row,
+            manual_row,
         ], spacing=5)
         
         self.content = ft.Column(
