@@ -13,3 +13,4 @@ flet pack main.py --name "AutoCrop" --icon autocrop.ico --output ../output_folde
 そのパスに書き込み権限が必要です。
 まとめ
 --output オプションを使えば、build/dist の出力先を自由に指定できます。
+C:\Users\kakic\AppData\Roaming\Python\Python312\Scripts\flet.exe pack main.py --name "AutoCrop" --icon autocrop.ico --add-data "MENU_MANUAL.md;."
