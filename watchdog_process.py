@@ -12,6 +12,38 @@ from config import get_GAMMA
 
 text_style = ft.TextStyle(font_family="Noto Sans CJK JP")
 
+class CsvFileHandler(FileSystemEventHandler):
+    """CSVフォルダー内の.preファイルを.csvにリネームするハンドラー"""
+    def __init__(self):
+        self.processed_files = set()
+    
+    def on_created(self, event):
+        if not event.is_directory and event.src_path.lower().endswith('.pre'):
+            # ファイルの書き込み完了を待つ
+            time.sleep(0.5)
+            self.rename_to_csv(event.src_path)
+    
+    def rename_to_csv(self, pre_file_path):
+        """XXX.preファイルをXXX.csvにリネーム"""
+        if pre_file_path in self.processed_files:
+            return
+        
+        self.processed_files.add(pre_file_path)
+        
+        try:
+            # .preを.csvに変更
+            csv_file_path = pre_file_path[:-4] + '.csv'
+            
+            # ファイルが存在し、書き込みが完了していることを確認
+            if os.path.exists(pre_file_path):
+                # リネーム実行
+                os.rename(pre_file_path, csv_file_path)
+                print(f"CSVファイルをリネームしました: {pre_file_path} -> {csv_file_path}")
+            else:
+                print(f"警告: ファイルが見つかりません: {pre_file_path}")
+        except Exception as e:
+            print(f"CSVファイルのリネームエラー: {e}")
+
 class ImageHandler(FileSystemEventHandler):
     def __init__(self, page, view_controls):
         self.page = page
@@ -152,15 +184,15 @@ class ImageHandler(FileSystemEventHandler):
                 root_folder_path = self.page.session.get("root_folder_path")
                 if root_folder_path:
                     root_folder_name = os.path.basename(root_folder_path)
-                    csv_root_folder_path = os.path.join(csv_dir, root_folder_name)
-                    os.makedirs(csv_root_folder_path, exist_ok=True)
+                    # csv_root_folder_path = os.path.join(csv_dir, root_folder_name)
+                    # os.makedirs(csv_root_folder_path, exist_ok=True)
                     
                     # barcode_prefixフォルダを作成
-                    csv_barcode_folder_path = os.path.join(csv_root_folder_path, barcode_prefix)
-                    os.makedirs(csv_barcode_folder_path, exist_ok=True)
+                    # csv_barcode_folder_path = os.path.join(csv_root_folder_path, barcode_prefix)
+                    # os.makedirs(csv_barcode_folder_path, exist_ok=True)
                     
                     # barcode_number.csvを書き込み
-                    csv_file_path = os.path.join(csv_barcode_folder_path, f"{barcode_number}.csv")
+                    csv_file_path = os.path.join(csv_dir, f"{barcode_number}.pre")
                     file_exists = os.path.exists(csv_file_path)
                     
                     with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
@@ -181,24 +213,24 @@ class ImageHandler(FileSystemEventHandler):
                     print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
                     
                     # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
-                    parent_csv_path = os.path.join(csv_root_folder_path, f"{root_folder_name}.csv")
-                    parent_file_exists = os.path.exists(parent_csv_path)
+                    # parent_csv_path = os.path.join(csv_root_folder_path, f"{root_folder_name}.csv")
+                    # parent_file_exists = os.path.exists(parent_csv_path)
                     
-                    with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
-                        parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
+                    # with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
+                    #     parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
                         
-                        # ファイルが新規作成の場合はヘッダーを書き込み
-                        if not parent_file_exists:
-                            parent_writer.writeheader()
+                    #     # ファイルが新規作成の場合はヘッダーを書き込み
+                    #     if not parent_file_exists:
+                    #         parent_writer.writeheader()
                         
-                        # データを書き込み
-                        parent_writer.writerow({
-                            'バーコード': barcode_whole if barcode_whole else 'unknown',
-                            '高さ': estimated_height,
-                            '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        })
+                    #     # データを書き込み
+                    #     parent_writer.writerow({
+                    #         'バーコード': barcode_whole if barcode_whole else 'unknown',
+                    #         '高さ': estimated_height,
+                    #         '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    #     })
                     
-                    print(f"CSVデータが親ディレクトリ '{parent_csv_path}' にも書き込まれました。")
+                    # print(f"CSVデータが親ディレクトリ '{parent_csv_path}' にも書き込まれました。")
             except Exception as e:
                 print(f"CSV書き込みエラー: {e}")
 
@@ -438,4 +470,13 @@ def start_watchdog(page: ft.Page, view_controls):
     observer = Observer()
     observer.schedule(event_handler, watch_dir, recursive=False)
     observer.start()
-    return observer 
+    
+    # CSVフォルダーも監視
+    csv_dir = get_CSV_DIR()
+    os.makedirs(csv_dir, exist_ok=True)
+    csv_handler = CsvFileHandler()
+    csv_observer = Observer()
+    csv_observer.schedule(csv_handler, csv_dir, recursive=False)
+    csv_observer.start()
+    
+    return observer, csv_observer 

@@ -26,6 +26,9 @@ def main(page: ft.Page):
         if hasattr(page, 'observer'):
             page.observer.stop()
             page.observer.join()
+        if hasattr(page, 'csv_observer'):
+            page.csv_observer.stop()
+            page.csv_observer.join()
         page.window.close()
 
     def update_mode_display():
@@ -319,7 +322,7 @@ def main(page: ft.Page):
     )
 
     page.add(layout)
-    page.observer = start_watchdog(page, [main_view])
+    page.observer, page.csv_observer = start_watchdog(page, [main_view])
     
     # 初期モード表示を更新（page.add()の後に実行）
     update_mode_display()

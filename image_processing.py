@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+import math
 from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, get_ASPECT_RATIO
 
 # (No changes here yet, just preparing for import of constants from config.py)
@@ -238,6 +239,6 @@ def process_image(original_image_path, processed_file_path, preview_name):
     print(f"プレビュー画像が '{preview_file_path}' として保存されました。")
     
     estimated_height = red_top_y * get_A() + get_B()
-    # 5刻みの整数に丸める
-    estimated_height = round(estimated_height / 5) * 5
+    # 5刻みの整数に切り捨てる
+    estimated_height = math.floor(estimated_height / 5) * 5
     return red_top_y, estimated_height, processed_file_path, preview_file_path, binary_preview_path
