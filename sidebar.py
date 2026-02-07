@@ -6,7 +6,7 @@ import os
 import sys
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, set_CSV_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_CSV_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -52,6 +52,7 @@ class SideBar(ft.Container):
                     self.set_processed_dir_setting_visible(False)
                     self.set_watch_dir_setting_visible(False)
                     self.set_preview_dir_setting_visible(False)
+                    self.set_csv_dir_setting_visible(False)
                     self.set_gamma_setting_visible(False)
                     self.set_margin_setting_visible(False)
                     self.set_aspect_ratio_setting_visible(False)
@@ -374,6 +375,40 @@ class SideBar(ft.Container):
             preview_dir_field,
             ft.Row([
                 preview_dir_pick_button, preview_dir_button, preview_dir_cancel_button
+            ], alignment=ft.MainAxisAlignment.START, spacing=5)
+        ], spacing=5, visible=False)
+        
+        # --- CSV directory settings UI ---
+        csv_dir_field = ft.TextField(
+            label="CSVフォルダー (CSV_DIR)",
+            value=get_CSV_DIR(),
+            width=220,
+            dense=True,
+        )
+        def csv_dir_pick_result(e):
+            if e.path:
+                csv_dir_field.value = e.path
+                csv_dir_field.update()
+        def update_csv_dir(event):
+            set_CSV_DIR(csv_dir_field.value)
+            page.snack_bar = ft.SnackBar(ft.Text("CSVフォルダーを更新しました。再起動が必要です。"))
+            page.snack_bar.open = True
+            self.set_csv_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        def cancel_csv_dir_setting(event):
+            self.set_csv_dir_setting_visible(False)
+            self.set_barcode_field_visible(True)
+            page.update()
+        csv_dir_picker = ft.FilePicker(on_result=csv_dir_pick_result)
+        page.overlay.append(csv_dir_picker)
+        csv_dir_pick_button = ft.ElevatedButton("参照", on_click=lambda e: csv_dir_picker.get_directory_path())
+        csv_dir_button = ft.ElevatedButton("更新", on_click=update_csv_dir)
+        csv_dir_cancel_button = ft.ElevatedButton("キャンセル", on_click=cancel_csv_dir_setting)
+        csv_dir_row = ft.Column([
+            csv_dir_field,
+            ft.Row([
+                csv_dir_pick_button, csv_dir_button, csv_dir_cancel_button
             ], alignment=ft.MainAxisAlignment.START, spacing=5)
         ], spacing=5, visible=False)
         
@@ -758,6 +793,7 @@ class SideBar(ft.Container):
             processed_dir_row,
             watch_dir_row,
             preview_dir_row,
+            csv_dir_row,
             gamma_row,
             margin_row,
             aspect_ratio_row,
@@ -774,6 +810,8 @@ class SideBar(ft.Container):
         self.watch_dir_row = watch_dir_row
         self.preview_dir_row = preview_dir_row
         self.preview_dir_picker = preview_dir_picker
+        self.csv_dir_row = csv_dir_row
+        self.csv_dir_picker = csv_dir_picker
         self.gamma_row = gamma_row
         self.gamma_slider = gamma_slider
         self.gamma_value_text = gamma_value_text
@@ -808,6 +846,10 @@ class SideBar(ft.Container):
     def set_preview_dir_setting_visible(self, visible: bool):
         self.preview_dir_row.visible = visible
         self.preview_dir_row.update()
+    
+    def set_csv_dir_setting_visible(self, visible: bool):
+        self.csv_dir_row.visible = visible
+        self.csv_dir_row.update()
     
     def set_gamma_setting_visible(self, visible: bool):
         self.gamma_row.visible = visible
@@ -899,9 +941,13 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
         
         # 古いバーコード番号が存在し、新しいバーコード番号と異なる場合、古いCSVファイルを削除
         if old_barcode_number and old_barcode_number != barcode_number:
+            # CSV_DIR内の古いCSVファイルを削除
+            csv_dir = get_CSV_DIR()
+            root_folder_name = os.path.basename(root_folder_path)
             old_barcode_prefix = old_barcode_number[:2] if len(old_barcode_number) >= 2 else "XX"
-            old_barcode_folder_path = os.path.join(root_folder_path, old_barcode_prefix)
-            old_csv_file_path = os.path.join(old_barcode_folder_path, f"{old_barcode_number}.csv")
+            csv_root_folder_path = os.path.join(csv_dir, root_folder_name)
+            old_csv_barcode_folder_path = os.path.join(csv_root_folder_path, old_barcode_prefix)
+            old_csv_file_path = os.path.join(old_csv_barcode_folder_path, f"{old_barcode_number}.csv")
             if os.path.exists(old_csv_file_path):
                 try:
                     os.remove(old_csv_file_path)
@@ -926,8 +972,18 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
         if current_pending and current_pending.get('container') == image_data.get('container'):
             page.session.set('pending_image_data', image_data)
         
-        # CSVファイルに書き込み
-        csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
+        # CSVファイルに書き込み（CSV_DIR内に書き込む）
+        csv_dir = get_CSV_DIR()
+        root_folder_name = os.path.basename(root_folder_path)
+        csv_root_folder_path = os.path.join(csv_dir, root_folder_name)
+        os.makedirs(csv_root_folder_path, exist_ok=True)
+        
+        # barcode_prefixフォルダを作成
+        csv_barcode_folder_path = os.path.join(csv_root_folder_path, barcode_prefix)
+        os.makedirs(csv_barcode_folder_path, exist_ok=True)
+        
+        # barcode_number.csvを書き込み
+        csv_file_path = os.path.join(csv_barcode_folder_path, f"{barcode_number}.csv")
         file_exists = os.path.exists(csv_file_path)
         
         with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
@@ -944,23 +1000,20 @@ def reprocess_image_with_barcode(page, image_data, barcode_whole):
             })
         
         # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
-        root_folder_path = page.session.get("root_folder_path")
-        if root_folder_path:
-            root_folder_name = os.path.basename(root_folder_path)
-            parent_csv_path = os.path.join(root_folder_path, f"{root_folder_name}.csv")
-            parent_file_exists = os.path.exists(parent_csv_path)
+        parent_csv_path = os.path.join(csv_root_folder_path, f"{root_folder_name}.csv")
+        parent_file_exists = os.path.exists(parent_csv_path)
+        
+        with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
+            parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
             
-            with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
-                parent_writer = csv.DictWriter(parent_csvfile, fieldnames=fieldnames)
-                
-                if not parent_file_exists:
-                    parent_writer.writeheader()
-                
-                parent_writer.writerow({
-                    'バーコード': barcode_whole,
-                    '高さ': image_data['estimated_height'],
-                    '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
+            if not parent_file_exists:
+                parent_writer.writeheader()
+            
+            parent_writer.writerow({
+                'バーコード': barcode_whole,
+                '高さ': image_data['estimated_height'],
+                '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
         
         # データベースを更新
         new_item = ItemInfo(

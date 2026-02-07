@@ -48,6 +48,15 @@ def get_PREVIEW_DIR():
         settings = load_settings()
     return settings.get("PREVIEW_DIR", "preview")
 
+def get_CSV_DIR():
+    """CSVフォルダーのパスを取得"""
+    settings = load_settings()
+    # 念のため、まだCSV_DIRがない場合は初期化を試みる
+    if "CSV_DIR" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("CSV_DIR", get_PROCESSED_DIR())
+
 def initialize_settings():
     """アプリケーション起動時に設定を初期化。新しい項目があれば追加"""
     try:
@@ -62,6 +71,11 @@ def initialize_settings():
         # PREVIEW_DIR項目がない場合はデフォルト値"preview"を追加
         if "PREVIEW_DIR" not in settings:
             settings["PREVIEW_DIR"] = "preview"
+            updated = True
+        
+        # CSV_DIR項目がない場合はデフォルト値PROCESSED_DIRを追加
+        if "CSV_DIR" not in settings:
+            settings["CSV_DIR"] = settings.get("PROCESSED_DIR", "processed")
             updated = True
         
         # マージン項目がない場合はデフォルト値5%（パーセント）を追加
@@ -142,6 +156,13 @@ def set_PREVIEW_DIR(path):
     """プレビューフォルダーのパスを設定"""
     settings = load_settings()
     settings["PREVIEW_DIR"] = path
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def set_CSV_DIR(path):
+    """CSVフォルダーのパスを設定"""
+    settings = load_settings()
+    settings["CSV_DIR"] = path
     with open(SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2)
 

@@ -6,7 +6,7 @@ from image_processing import process_image
 from item_db import ItemInfo, session
 import time
 from datetime import datetime
-from config import get_PROCESSED_DIR, get_WATCH_DIR, get_A, get_B, set_A_B, increment_TOTAL_SHOTS
+from config import get_PROCESSED_DIR, get_WATCH_DIR, get_CSV_DIR, get_A, get_B, set_A_B, increment_TOTAL_SHOTS
 import csv
 from config import get_GAMMA
 
@@ -147,31 +147,41 @@ class ImageHandler(FileSystemEventHandler):
         # CSVファイルに商品データを書き込み（barcode_numberがある場合のみ）
         if barcode_number:
             try:
-                csv_file_path = os.path.join(barcode_folder_path, f"{barcode_number}.csv")
-                file_exists = os.path.exists(csv_file_path)
-                
-                with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
-                    fieldnames = ['バーコード', '高さ', '時刻']
-                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    
-                    # ファイルが新規作成の場合はヘッダーを書き込み
-                    if not file_exists:
-                        writer.writeheader()
-                    
-                    # データを書き込み
-                    writer.writerow({
-                        'バーコード': barcode_whole if barcode_whole else 'unknown',
-                        '高さ': estimated_height,
-                        '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
-                
-                print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
-                
-                # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
+                # CSV_DIR内にroot_folder_nameとbarcode_prefixの構造を作成
+                csv_dir = get_CSV_DIR()
                 root_folder_path = self.page.session.get("root_folder_path")
                 if root_folder_path:
                     root_folder_name = os.path.basename(root_folder_path)
-                    parent_csv_path = os.path.join(root_folder_path, f"{root_folder_name}.csv")
+                    csv_root_folder_path = os.path.join(csv_dir, root_folder_name)
+                    os.makedirs(csv_root_folder_path, exist_ok=True)
+                    
+                    # barcode_prefixフォルダを作成
+                    csv_barcode_folder_path = os.path.join(csv_root_folder_path, barcode_prefix)
+                    os.makedirs(csv_barcode_folder_path, exist_ok=True)
+                    
+                    # barcode_number.csvを書き込み
+                    csv_file_path = os.path.join(csv_barcode_folder_path, f"{barcode_number}.csv")
+                    file_exists = os.path.exists(csv_file_path)
+                    
+                    with open(csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
+                        fieldnames = ['バーコード', '高さ', '時刻']
+                        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        
+                        # ファイルが新規作成の場合はヘッダーを書き込み
+                        if not file_exists:
+                            writer.writeheader()
+                        
+                        # データを書き込み
+                        writer.writerow({
+                            'バーコード': barcode_whole if barcode_whole else 'unknown',
+                            '高さ': estimated_height,
+                            '時刻': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        })
+                    
+                    print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
+                    
+                    # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
+                    parent_csv_path = os.path.join(csv_root_folder_path, f"{root_folder_name}.csv")
                     parent_file_exists = os.path.exists(parent_csv_path)
                     
                     with open(parent_csv_path, 'a', newline='', encoding='utf-8') as parent_csvfile:
