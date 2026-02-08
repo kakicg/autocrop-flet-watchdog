@@ -6,6 +6,8 @@ import os
 import asyncio
 import sys
 import time
+import platform
+import subprocess
 from config import get_PROCESSED_DIR, get_PREVIEW_DIR, initialize_settings, get_TOTAL_SHOTS, get_SHOT_COUNT_START_DATE, reset_TOTAL_SHOTS, get_MENU_BAR_VISIBLE
 from version import VERSION
 
@@ -182,6 +184,100 @@ def main(page: ft.Page):
         start_date = get_SHOT_COUNT_START_DATE()
         shot_count_text.value = f"累計撮影: {total_shots}枚 (起算日: {start_date})"
         page.update()
+    
+    def shutdown_with_countdown(event):
+        """Windowsをシャットダウンする（10秒のカウントダウン付き）"""
+        # Windows以外の場合は警告を表示
+        if platform.system() != "Windows":
+            page.snack_bar = ft.SnackBar(
+                ft.Text("この機能はWindows環境でのみ利用できます。"),
+                bgcolor=ft.Colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+        
+        # シャットダウンキャンセルフラグ
+        shutdown_cancelled = {"cancelled": False}
+        
+        # カウントダウン表示用のテキスト
+        countdown_text = ft.Text("10", size=48, weight=ft.FontWeight.BOLD, color=ft.Colors.RED)
+        message_text = ft.Text("秒後にWindowsをシャットダウンします", size=16)
+        
+        # キャンセルボタン
+        def cancel_shutdown(e):
+            shutdown_cancelled["cancelled"] = True
+            dialog.open = False
+            page.update()
+            page.snack_bar = ft.SnackBar(
+                ft.Text("シャットダウンをキャンセルしました。"),
+                bgcolor=ft.Colors.GREEN
+            )
+            page.snack_bar.open = True
+            page.update()
+        
+        cancel_button = ft.ElevatedButton(
+            "キャンセル",
+            on_click=cancel_shutdown,
+            bgcolor=ft.Colors.GREEN,
+            color=ft.Colors.WHITE
+        )
+        
+        # ダイアログを作成
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("システム終了", size=20, weight=ft.FontWeight.BOLD),
+            content=ft.Column(
+                [
+                    countdown_text,
+                    message_text,
+                    cancel_button,
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                tight=True,
+                width=400,
+                height=200,
+            ),
+            actions_alignment=ft.MainAxisAlignment.CENTER,
+        )
+        
+        page.dialog = dialog
+        dialog.open = True
+        page.update()
+        
+        # 非同期でカウントダウンを実行
+        async def countdown_task():
+            # 10秒のカウントダウン
+            for remaining in range(10, 0, -1):
+                if shutdown_cancelled["cancelled"]:
+                    return
+                
+                countdown_text.value = str(remaining)
+                page.update()
+                await asyncio.sleep(1)
+            
+            # キャンセルされていなければシャットダウン実行
+            if not shutdown_cancelled["cancelled"]:
+                dialog.open = False
+                page.update()
+                
+                # プログラムを終了
+                terminate(event)
+                
+                # Windowsをシャットダウン
+                try:
+                    subprocess.run(["shutdown", "/s", "/t", "0"], check=True)
+                except Exception as e:
+                    print(f"シャットダウンコマンドの実行エラー: {e}")
+                    page.snack_bar = ft.SnackBar(
+                        ft.Text(f"シャットダウンコマンドの実行に失敗しました: {e}"),
+                        bgcolor=ft.Colors.RED
+                    )
+                    page.snack_bar.open = True
+                    page.update()
+        
+        # 非同期タスクを開始
+        page.run_task(countdown_task)
 
     page.title = f"Auto Crop App v{VERSION}"
     page.theme_mode = ft.ThemeMode.DARK
@@ -269,6 +365,7 @@ def main(page: ft.Page):
             ft.PopupMenuItem(),  # divider
             ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
             ft.PopupMenuItem(),  # divider
+            ft.PopupMenuItem(text="終了", on_click=shutdown_with_countdown),
             ft.PopupMenuItem(text="システム終了", on_click=terminate),
         ],
         visible=menu_bar_visible
