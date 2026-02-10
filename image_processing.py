@@ -39,6 +39,37 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # オリジナル画像を読み込み（トリミング用に保持）
     original_image = cv2.imread(original_image_path)
     
+    # preview/images/mask.pngが存在する場合は合成
+    preview_dir = get_PREVIEW_DIR()
+    mask_path = os.path.join(preview_dir, "images", "mask.png")
+    if os.path.exists(mask_path):
+        # mask.pngを読み込み（アルファチャンネルも含む）
+        mask_image = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+        
+        if mask_image is not None:
+            # 元の画像とマスク画像のサイズを取得
+            orig_height, orig_width = original_image.shape[:2]
+            mask_height, mask_width = mask_image.shape[:2]
+            
+            # マスク画像を元の画像のサイズにリサイズ
+            if mask_height != orig_height or mask_width != orig_width:
+                mask_image = cv2.resize(mask_image, (orig_width, orig_height), interpolation=cv2.INTER_LINEAR)
+            
+            # アルファチャンネルがある場合（RGBA）
+            if mask_image.shape[2] == 4:
+                # アルファチャンネルを抽出
+                alpha = mask_image[:, :, 3] / 255.0
+                alpha = np.stack([alpha, alpha, alpha], axis=2)
+                
+                # RGBチャンネルを抽出
+                mask_rgb = mask_image[:, :, :3]
+                
+                # アルファブレンディングで合成
+                original_image = (original_image * (1 - alpha) + mask_rgb * alpha).astype(np.uint8)
+            else:
+                # アルファチャンネルがない場合（RGB）、マスク画像で上書き
+                original_image = mask_image[:, :, :3]
+    
     # マージンを取得（パーセント）
     margin_top_percent = min(50.0, get_MARGIN_TOP())  # 50%を超える場合は50%に制限
     margin_bottom_percent = min(50.0, get_MARGIN_BOTTOM())  # 50%を超える場合は50%に制限
