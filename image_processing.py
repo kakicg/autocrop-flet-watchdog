@@ -39,8 +39,16 @@ def process_image(original_image_path, processed_file_path, preview_name):
     # オリジナル画像を読み込み（トリミング用に保持）
     original_image = cv2.imread(original_image_path)
     
-    # preview/images/mask.pngが存在する場合は合成
+    # 合成前に元の画像を保存
     preview_dir = get_PREVIEW_DIR()
+    # preview_nameから拡張子を除いてベース名を取得
+    base_name = os.path.splitext(preview_name)[0]
+    original_save_path = os.path.join(preview_dir, f"{base_name}_original.jpg")
+    os.makedirs(preview_dir, exist_ok=True)
+    cv2.imwrite(original_save_path, original_image)
+    print(f"元の画像が '{original_save_path}' として保存されました。")
+    
+    # preview/images/mask.pngが存在する場合は合成
     mask_path = os.path.join(preview_dir, "images", "mask.png")
     if os.path.exists(mask_path):
         # mask.pngを読み込み（アルファチャンネルも含む）
