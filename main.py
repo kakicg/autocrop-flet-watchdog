@@ -185,6 +185,56 @@ def main(page: ft.Page):
         shot_count_text.value = f"累計撮影: {total_shots}枚 (起算日: {start_date})"
         page.update()
     
+    def show_power_off_confirmation(event):
+        """メッセージ領域に「本当に電源オフにしますか？」と終了/キャンセルを表示"""
+        if platform.system() != "Windows":
+            page.snack_bar = ft.SnackBar(
+                ft.Text("この機能はWindows環境でのみ利用できます。"),
+                bgcolor=ft.Colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        container = page.side_bar.top_message_container
+        normal_text = page.side_bar.top_message_text
+
+        def on_confirm(e):
+            # メッセージ領域に「シャットダウン中」を表示してからカウントダウン開始
+            container.content = normal_text
+            normal_text.value = "シャットダウン中"
+            container.border = ft.border.all(6, ft.Colors.ORANGE_300)
+            page.update()
+            shutdown_with_countdown(None)
+
+        def on_cancel(e):
+            container.content = normal_text
+            normal_text.value = "バーコード自動入力"
+            container.border = ft.border.all(6, ft.Colors.PINK_100)
+            page.update()
+
+        confirm_msg = ft.Text(
+            "本当に電源オフにしますか？",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            color=ft.Colors.WHITE,
+            size=14,
+        )
+        confirm_btn = ft.ElevatedButton("終了", on_click=on_confirm)
+        cancel_btn = ft.OutlinedButton("キャンセル", on_click=on_cancel)
+        confirm_row = ft.Row(
+            [confirm_btn, cancel_btn],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
+        )
+        confirmation_content = ft.Column(
+            [confirm_msg, confirm_row],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=10,
+        )
+        container.content = confirmation_content
+        container.border = ft.border.all(6, ft.Colors.ORANGE_300)
+        page.update()
+
     def shutdown_with_countdown(event):
         """Windowsをシャットダウンする（10秒のカウントダウン付き）"""
         # Windows以外の場合は警告を表示
@@ -365,10 +415,16 @@ def main(page: ft.Page):
             ft.PopupMenuItem(),  # divider
             ft.PopupMenuItem(text="累計撮影枚数をリセット", on_click=reset_shot_count),
             ft.PopupMenuItem(),  # divider
-            ft.PopupMenuItem(text="終了", on_click=shutdown_with_countdown),
             ft.PopupMenuItem(text="システム終了", on_click=terminate),
         ],
         visible=menu_bar_visible
+    )
+    
+    # 電源オフボタン（アイコンで表示、Q+Enterでも実行可能）
+    power_off_button = ft.IconButton(
+        icon=ft.Icons.POWER_SETTINGS_NEW,
+        tooltip="電源オフ (Q+Enter)",
+        on_click=show_power_off_confirmation,
     )
     
     page.appbar = ft.AppBar(
@@ -381,6 +437,7 @@ def main(page: ft.Page):
         actions=[
             shot_count_text,
             mode_text_container,
+            power_off_button,
             popup_menu_button,
         ],
     )
