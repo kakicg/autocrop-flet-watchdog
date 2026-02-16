@@ -483,6 +483,19 @@ def main(page: ft.Page):
     update_shot_count_display()
     page.update()
 
+    # スタンバイ通知: Pico に "READY\n" 送信 + トリガー + LED 10秒点滅
+    try:
+        from pico_led import (
+            start_send_ready_in_background,
+            start_trigger_in_background,
+            start_blink_in_background,
+        )
+        start_send_ready_in_background()  # Pico が "READY\n" で処理開始する場合
+        start_trigger_in_background()     # トリガーピン（GP16）をパルス
+        start_blink_in_background(seconds=10)
+    except ImportError:
+        pass
+
 # Fletアプリケーションを実行
 if __name__ == "__main__":
    ft.app(target=main, view=ft.FLET_APP)

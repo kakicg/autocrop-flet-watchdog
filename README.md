@@ -158,4 +158,4 @@ cd ../..
 
 アプリ AutoCrop　の生成コマンド履歴　2025/10/22
 
-C:\Users\kakic\AppData\Roaming\Python\Python312\Scripts\flet.exe pack main.py --name "AutoCrop" --icon autocrop.ico
+c
