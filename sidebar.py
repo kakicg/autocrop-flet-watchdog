@@ -101,6 +101,18 @@ class SideBar(ft.Container):
                 # barcode_numberを計算
                 import re
                 cleaned_barcode = re.sub(r'\D', '', barcode_whole)
+                if len(cleaned_barcode) != 40:
+                    try:
+                        from pico_led import start_send_nogood_in_background
+                        start_send_nogood_in_background()
+                    except ImportError:
+                        pass
+                    top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
+                    top_message_container.content.value = "40桁のバーコードを入力してください"
+                    event.control.value = ""
+                    event.control.update()
+                    page.update()
+                    return
                 if len(cleaned_barcode) < 38:
                     barcode_number = cleaned_barcode[:5]
                 else:
@@ -140,6 +152,17 @@ class SideBar(ft.Container):
             # barcode_numberの設定ロジック
             import re
             cleaned_barcode = re.sub(r'\D', '', barcode_whole)
+            if len(cleaned_barcode) != 40:
+                try:
+                    from pico_led import start_send_nogood_in_background
+                    start_send_nogood_in_background()
+                except ImportError:
+                    pass
+                top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
+                top_message_container.content.value = "40桁のバーコードを入力してください"
+                event.control.value = ""
+                page.update()
+                return
             if len(cleaned_barcode) < 38:
                 barcode_number = cleaned_barcode[:5]
             else:

@@ -124,6 +124,8 @@ def get_pico_port_count():
 READY_MESSAGE = b"READY\n"
 # Pico に 40桁バーコード受信完了を通知する文字列
 GOOD_MESSAGE = b"GOOD\n"
+# Pico に 40桁以外のバーコードを通知する文字列
+NOGOOD_MESSAGE = b"NOGOOD\n"
 
 
 def send_ready():
@@ -170,4 +172,27 @@ def send_good():
 def start_send_good_in_background():
     """全 Pico に GOOD をバックグラウンドで送信する（非ブロック）。"""
     t = threading.Thread(target=send_good, daemon=True)
+    t.start()
+
+
+def send_nogood():
+    """
+    接続中の全 Pico に "NOGOOD\\n" を送信する。
+    40桁以外のバーコードを受信したときに使用。接続失敗時は何もしない。
+    """
+    if serial is None:
+        return
+    for port in _find_pico_ports():
+        try:
+            ser = serial.Serial(port, BAUD, timeout=0.5)
+            ser.write(NOGOOD_MESSAGE)
+            ser.flush()
+            ser.close()
+        except Exception:
+            pass
+
+
+def start_send_nogood_in_background():
+    """全 Pico に NOGOOD をバックグラウンドで送信する（非ブロック）。"""
+    t = threading.Thread(target=send_nogood, daemon=True)
     t.start()

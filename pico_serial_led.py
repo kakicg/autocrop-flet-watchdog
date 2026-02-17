@@ -11,7 +11,7 @@ Windows 側の Python から USB シリアルでコマンドを受け取り、LE
 
 【コマンド】
   1文字: 1 / H → 点灯,  0 / L → 消灯,  b / B → 3回点滅,  T → トリガーパルス
-  文字列: "READY\\n" → 起動完了で点滅,  "GOOD\\n" → 40桁バーコード受信で3秒間早い点滅
+  文字列: "READY\\n" → 起動完了で点滅,  "GOOD\\n" → 40桁で3秒間早い点滅,  "NOGOOD\\n" → 40桁以外で1回長点滅
 """
 
 from machine import Pin
@@ -85,13 +85,15 @@ while True:
         elif c == "T":
             pulse_trigger()
         continue
-    # 改行まで貯めて "READY" / "GOOD" なら点滅
+    # 改行まで貯めて "READY" / "GOOD" / "NOGOOD" なら点滅
     if c == "\n" or c == "\r":
         line_upper = line_buf.strip().upper()
         if line_upper == "READY":
             blink(READY_BLINK_COUNT, READY_BLINK_ON_MS, READY_BLINK_OFF_MS)
         elif line_upper == "GOOD":
             blink_for_ms(GOOD_BLINK_DURATION_MS, GOOD_BLINK_ON_MS, GOOD_BLINK_OFF_MS)  # 3秒間早い点滅
+        elif line_upper == "NOGOOD":
+            blink(1, 500, 500)  # 40桁以外: 1回長く点滅（0.5秒点灯・0.5秒消灯）
         line_buf = ""
         continue
     line_buf += c
