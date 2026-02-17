@@ -129,23 +129,23 @@ python3 update_version.py major
 python3 update_version.py patch
 ```
 
-### Git Hooks設定
-初回設定時に以下のコマンドを実行してください：
+### コミット時にバージョンを自動で上げる（推奨）
+初回のみ、以下のいずれかで Git フックを入れてください。以降は **commit するたびに version.py が自動で上がり、同じコミットに含まれます**。
 
+**Windows（Git Bash または WSL）：**
 ```bash
-# 実行権限を付与
-chmod +x update_version.py
-
-# Git Hooksを設定
-cd .git/hooks
-cat > pre-commit << 'EOF'
-#!/bin/bash
-python3 ../../update_version.py
-git add ../../version.py
-EOF
-chmod +x pre-commit
-cd ../..
+cp githooks/prepare-commit-msg .git/hooks/prepare-commit-msg
+chmod +x .git/hooks/prepare-commit-msg
 ```
+
+**または install_hooks.bat を実行：**
+```bat
+install_hooks.bat
+```
+
+- コミットメッセージに `feature` / `機能追加` などが含まれる → **minor** アップ
+- `breaking` / `破壊的変更` など → **major** アップ
+- それ以外 → **patch** アップ
 
 ### バージョン表示
 アプリケーションのタイトルバーとアプリバーに現在のバージョンが表示されます。

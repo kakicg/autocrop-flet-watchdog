@@ -1,0 +1,13 @@
+#!/bin/sh
+# 通常のコミット時のみ version.py を自動でバージョンアップして同じコミットに含める
+# $1 = コミットメッセージファイル, $2 = commit | merge | squash など
+SOURCE=$2
+if [ -z "$SOURCE" ] || [ "$SOURCE" = "commit" ]; then
+  PYTHON=python
+  command -v python3 >/dev/null 2>&1 && PYTHON=python3
+  if [ -n "$1" ] && [ -f "$1" ]; then
+    "$PYTHON" update_version.py --message-file "$1" && git add version.py
+  else
+    "$PYTHON" update_version.py patch && git add version.py
+  fi
+fi
