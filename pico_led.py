@@ -122,6 +122,8 @@ def get_pico_port_count():
 
 # Pico が "READY\n" を受信して処理開始する場合に送る文字列
 READY_MESSAGE = b"READY\n"
+# Pico に 40桁バーコード受信完了を通知する文字列
+GOOD_MESSAGE = b"GOOD\n"
 
 
 def send_ready():
@@ -145,4 +147,27 @@ def send_ready():
 def start_send_ready_in_background():
     """全 Pico に READY をバックグラウンドで送信する（非ブロック）。"""
     t = threading.Thread(target=send_ready, daemon=True)
+    t.start()
+
+
+def send_good():
+    """
+    接続中の全 Pico に "GOOD\\n" を送信する。
+    40桁バーコードを重複なく受信したときなどに使用。接続失敗時は何もしない。
+    """
+    if serial is None:
+        return
+    for port in _find_pico_ports():
+        try:
+            ser = serial.Serial(port, BAUD, timeout=0.5)
+            ser.write(GOOD_MESSAGE)
+            ser.flush()
+            ser.close()
+        except Exception:
+            pass
+
+
+def start_send_good_in_background():
+    """全 Pico に GOOD をバックグラウンドで送信する（非ブロック）。"""
+    t = threading.Thread(target=send_good, daemon=True)
     t.start()

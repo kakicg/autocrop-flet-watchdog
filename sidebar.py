@@ -108,6 +108,17 @@ class SideBar(ft.Container):
                 
                 # 再処理を実行
                 reprocess_image_with_barcode(page, pending_image_data, barcode_whole)
+                # 40桁かつ前回と異なる場合のみ Pico に "GOOD\n" を送信
+                if len(cleaned_barcode) == 40:
+                    last_for_pico = (page.session.get("last_barcode_for_pico") or "").strip()
+                    current_stripped = barcode_whole.strip()
+                    if current_stripped != last_for_pico:
+                        try:
+                            from pico_led import start_send_good_in_background
+                            start_send_good_in_background()
+                            page.session.set("last_barcode_for_pico", current_stripped)
+                        except ImportError:
+                            pass
                 # モードをリセット
                 page.session.set('pending_mode', False)
                 page.session.set('pending_image_data', None)
@@ -185,6 +196,18 @@ class SideBar(ft.Container):
             page.session.set("barcode_list", barcode_list)
             page.session.set("barcode_number", barcode_number)
             event.control.value = ""
+
+            # 40桁かつ前回と異なる場合のみ Pico に "GOOD\n" を送信
+            if len(cleaned_barcode) == 40:
+                last_for_pico = (page.session.get("last_barcode_for_pico") or "").strip()
+                current_stripped = barcode_whole.strip()
+                if current_stripped != last_for_pico:
+                    try:
+                        from pico_led import start_send_good_in_background
+                        start_send_good_in_background()
+                        page.session.set("last_barcode_for_pico", current_stripped)
+                    except ImportError:
+                        pass
             
             top_message_container.border = ft.border.all(6, ft.Colors.BLUE_100)
             current_barcode_number = page.session.get("barcode_number")

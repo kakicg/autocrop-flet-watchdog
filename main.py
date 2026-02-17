@@ -488,11 +488,11 @@ def main(page: ft.Page):
         from pico_led import (
             start_send_ready_in_background,
             start_trigger_in_background,
-            start_blink_in_background,
+            # start_blink_in_background,
         )
         start_send_ready_in_background()  # Pico が "READY\n" で処理開始する場合
         start_trigger_in_background()     # トリガーピン（GP16）をパルス
-        start_blink_in_background(seconds=10)
+        # start_blink_in_background(seconds=10)
     except ImportError:
         pass
 
