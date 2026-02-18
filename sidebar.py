@@ -88,11 +88,17 @@ class SideBar(ft.Container):
                 event.control.value = ""
                 page.update()
                 return
-            # barcode_wholeの長さが0の場合、ランダムな40桁の数字を生成
+            # barcode_wholeの長さが0の場合、テストモードのときのみランダムな40桁を生成
             if len(barcode_whole) < 1:
-                import random
-                barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])
-            
+                if page.session.get('test_mode'):
+                    import random
+                    barcode_whole = ''.join([str(random.randint(0, 9)) for _ in range(40)])
+                else:
+                    top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
+                    top_message_container.content.value = "バーコードを入力してください"
+                    event.control.value = ""
+                    page.update()
+                    return
             page.session.set("barcode_whole", barcode_whole)
             
             # 再処理モードの場合

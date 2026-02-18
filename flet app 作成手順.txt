@@ -14,3 +14,11 @@ flet pack main.py --name "AutoCrop" --icon autocrop.ico --output ../output_folde
 まとめ
 --output オプションを使えば、build/dist の出力先を自由に指定できます。
 C:\Users\kakic\AppData\Roaming\Python\Python312\Scripts\flet.exe pack main.py --name "AutoCrop" --icon autocrop.ico --add-data "MENU_MANUAL.md;."
+
+git commit -m "feature: 新規エクスポート機能" → minor（1.1.16 → 1.2.0）
+git commit -m "fix: 保存ボタンの不具合修正" → patch（1.1.16 → 1.1.17）
+git commit -m "breaking: API の戻り値形式を変更" → major（1.1.16 → 2.0.0）
+
+手動で指定したいときは、従来どおり次のように実行できます。
+
+python update_version.py minor   # または major / patch
