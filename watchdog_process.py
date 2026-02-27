@@ -1,5 +1,6 @@
 import flet as ft
 from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 from watchdog.events import FileSystemEventHandler
 import os
 from image_processing import process_image
@@ -30,19 +31,24 @@ class CsvFileHandler(FileSystemEventHandler):
         
         self.processed_files.add(pre_file_path)
         
-        try:
-            # .preを.csvに変更
-            csv_file_path = pre_file_path[:-4] + '.csv'
-            
-            # ファイルが存在し、書き込みが完了していることを確認
-            if os.path.exists(pre_file_path):
-                # リネーム実行
-                os.rename(pre_file_path, csv_file_path)
-                print(f"CSVファイルをリネームしました: {pre_file_path} -> {csv_file_path}")
-            else:
-                print(f"警告: ファイルが見つかりません: {pre_file_path}")
-        except Exception as e:
-            print(f"CSVファイルのリネームエラー: {e}")
+        csv_file_path = pre_file_path[:-4] + '.csv'
+        
+        for attempt in range(3):
+            try:
+                if os.path.exists(pre_file_path):
+                    os.replace(pre_file_path, csv_file_path)
+                    print(f"CSVファイルをリネームしました: {pre_file_path} -> {csv_file_path}")
+                    return
+                else:
+                    print(f"情報: ファイルは既にリネーム済みです: {pre_file_path}")
+                    return
+            except PermissionError:
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"CSVファイルのリネームエラー: {e}")
+                return
+        
+        print(f"警告: リネーム失敗（リトライ上限）: {pre_file_path}")
 
 class ImageHandler(FileSystemEventHandler):
     def __init__(self, page, view_controls):
@@ -196,6 +202,13 @@ class ImageHandler(FileSystemEventHandler):
                         })
                     
                     print(f"CSVデータが '{csv_file_path}' に書き込まれました。")
+                    
+                    final_csv_path = csv_file_path[:-4] + '.csv'
+                    try:
+                        os.replace(csv_file_path, final_csv_path)
+                        print(f"CSVファイルをリネームしました: {csv_file_path} -> {final_csv_path}")
+                    except Exception as e:
+                        print(f"直接リネーム失敗（watchdogが処理します）: {e}")
                     
                     # 親ディレクトリ（root_folder_name）のCSVファイルにもアペンド
                     # parent_csv_path = os.path.join(csv_root_folder_path, f"{root_folder_name}.csv")
@@ -456,11 +469,11 @@ def start_watchdog(page: ft.Page, view_controls):
     observer.schedule(event_handler, watch_dir, recursive=False)
     observer.start()
     
-    # CSVフォルダーも監視
+    # CSVフォルダーも監視（ネットワークドライブ対応のためPollingObserverを使用）
     csv_dir = get_CSV_DIR()
     os.makedirs(csv_dir, exist_ok=True)
     csv_handler = CsvFileHandler()
-    csv_observer = Observer()
+    csv_observer = PollingObserver(timeout=2)
     csv_observer.schedule(csv_handler, csv_dir, recursive=False)
     csv_observer.start()
     
