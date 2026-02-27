@@ -1,17 +1,17 @@
 {
-  "A": -0.031078610603290677,
-  "B": 206.72394881170018,
+  "A": -0.07386363636363637,
+  "B": 340.9375,
   "PROCESSED_DIR": "../processed",
   "WATCH_DIR": "../watch",
   "GAMMA": 3.0,
   "PREVIEW_DIR": "../preview",
-  "MARGIN_TOP": 15.0,
-  "MARGIN_BOTTOM": 21.7,
-  "MARGIN_LEFT": 8.3,
-  "MARGIN_RIGHT": 8.3,
-  "TOTAL_SHOTS": 44,
+  "MARGIN_TOP": 19.8,
+  "MARGIN_BOTTOM": 23.0,
+  "MARGIN_LEFT": 17.9,
+  "MARGIN_RIGHT": 18.4,
   "SHOT_COUNT_START_DATE": "2025-11-07",
   "ASPECT_RATIO": "4:3",
   "MENU_BAR_VISIBLE": true,
-  "CSV_DIR": "../csv"
+  "CSV_DIR": "../csv",
+  "TOTAL_SHOTS": 10
 }

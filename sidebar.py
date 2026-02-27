@@ -108,11 +108,11 @@ class SideBar(ft.Container):
                 import re
                 cleaned_barcode = re.sub(r'\D', '', barcode_whole)
                 if len(cleaned_barcode) != 40:
-                    try:
-                        from pico_led import start_send_nogood_in_background
-                        start_send_nogood_in_background()
-                    except ImportError:
-                        pass
+                    # try:
+                    #     from pico_led import start_send_nogood_in_background
+                    #     start_send_nogood_in_background()
+                    # except ImportError:
+                    #     pass
                     top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
                     top_message_container.content.value = "40桁のバーコードを入力してください"
                     event.control.value = ""
@@ -159,11 +159,11 @@ class SideBar(ft.Container):
             import re
             cleaned_barcode = re.sub(r'\D', '', barcode_whole)
             if len(cleaned_barcode) != 40:
-                try:
-                    from pico_led import start_send_nogood_in_background
-                    start_send_nogood_in_background()
-                except ImportError:
-                    pass
+                # try:
+                #     from pico_led import start_send_nogood_in_background
+                #     start_send_nogood_in_background()
+                # except ImportError:
+                #     pass
                 top_message_container.border = ft.border.all(6, ft.Colors.RED_100)
                 top_message_container.content.value = "40桁のバーコードを入力してください"
                 event.control.value = ""

@@ -127,29 +127,14 @@ class ImageHandler(FileSystemEventHandler):
         
         output_file_path = os.path.join(barcode_folder_path, processed_name)
 
-        # 実測値モードの時はトリミングを行わず、オリジナル画像をそのままコピー
         if current_mode == "real_height_mode":
-            import shutil
-            import cv2
-            from config import get_PREVIEW_DIR
-            
-            # オリジナル画像をそのままコピー（トリミングなし）
-            shutil.copy2(image_path, output_file_path)
-            processed_path = output_file_path
-            
-            # previewフォルダにもコピー
-            preview_dir = get_PREVIEW_DIR()
-            os.makedirs(preview_dir, exist_ok=True)
-            preview_path = os.path.join(preview_dir, preview_name)
-            shutil.copy2(image_path, preview_path)
-            
-            # テスト用白黒画像は作成しない（Noneを返す）
-            test_path = None
-            
-            # 実測値モードではtop_yとestimated_heightは使用しない
-            top_y = None
+            top_y, estimated_height, processed_path, preview_path, test_path = process_image(
+                image_path, 
+                output_file_path, 
+                preview_name
+            )
             # 推定値には手動で入力した実測値を使用（cm単位をmm単位に変換）
-            estimated_height = int(real_height * 10) if real_height is not None else 0
+            estimated_height = int(real_height * 10) if real_height is not None else estimated_height
         else:
             top_y, estimated_height, processed_path, preview_path, test_path = process_image(
                 image_path, 
