@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 import math
-from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, get_ASPECT_RATIO
+from config import get_PROCESSED_DIR, get_A, get_B, get_GAMMA, get_PREVIEW_DIR, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, get_HEAD_MARGIN, get_ASPECT_RATIO
 
 # (No changes here yet, just preparing for import of constants from config.py)
 
@@ -157,8 +157,12 @@ def process_image(original_image_path, processed_file_path, preview_name):
         red_top_y = margin_area_top
         red_bottom_y = margin_area_bottom
     
-    # 緑矩形の上下の辺を赤矩形の上下の辺と同一ライン上に揃える
-    y1 = red_top_y
+    # 頭上マージンを適用（赤矩形の高さに対するパーセント分だけ上方に拡張）
+    red_height = red_bottom_y - red_top_y
+    head_margin_percent = get_HEAD_MARGIN()
+    head_margin_px = int(red_height * head_margin_percent / 100.0)
+    
+    y1 = max(margin_area_top, red_top_y - head_margin_px)
     y2 = red_bottom_y
     crop_height = y2 - y1
     

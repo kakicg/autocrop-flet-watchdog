@@ -6,12 +6,13 @@
   "GAMMA": 3.0,
   "PREVIEW_DIR": "../preview",
   "MARGIN_TOP": 19.8,
-  "MARGIN_BOTTOM": 23.0,
+  "MARGIN_BOTTOM": 24.3,
   "MARGIN_LEFT": 17.9,
   "MARGIN_RIGHT": 18.4,
   "SHOT_COUNT_START_DATE": "2025-11-07",
+  "HEAD_MARGIN": 14.7,
   "ASPECT_RATIO": "4:3",
   "MENU_BAR_VISIBLE": true,
   "CSV_DIR": "../csv",
-  "TOTAL_SHOTS": 10
+  "TOTAL_SHOTS": 17
 }

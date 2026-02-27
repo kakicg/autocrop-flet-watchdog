@@ -6,7 +6,7 @@ import os
 import sys
 import csv
 from sqlalchemy.orm import declarative_base
-from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, set_CSV_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_CSV_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
+from config import set_PROCESSED_DIR, set_WATCH_DIR, set_PREVIEW_DIR, set_CSV_DIR, get_PROCESSED_DIR, get_WATCH_DIR, get_PREVIEW_DIR, get_CSV_DIR, get_GAMMA, set_GAMMA, get_MARGIN_TOP, get_MARGIN_BOTTOM, get_MARGIN_LEFT, get_MARGIN_RIGHT, set_MARGIN_TOP, set_MARGIN_BOTTOM, set_MARGIN_LEFT, set_MARGIN_RIGHT, get_HEAD_MARGIN, set_HEAD_MARGIN, get_ASPECT_RATIO, set_ASPECT_RATIO, get_MENU_BAR_VISIBLE, set_MENU_BAR_VISIBLE
 from item_db import ItemInfo, session
 from datetime import datetime
 
@@ -613,6 +613,33 @@ class SideBar(ft.Container):
             on_change=on_margin_right_change,
         )
         
+        # --- Head Margin (頭上マージン) UI ---
+        head_margin_value_text = ft.Text(
+            value=f"{get_HEAD_MARGIN():.1f}%",
+            style=ft.TextStyle(font_family="Noto Sans CJK JP"),
+            size=12,
+        )
+        
+        def update_head_margin_label(value):
+            head_margin_value_text.value = f"{value:.1f}%"
+            head_margin_value_text.update()
+        
+        def on_head_margin_change(e):
+            margin_value = e.control.value
+            update_head_margin_label(margin_value)
+            set_HEAD_MARGIN(margin_value)
+            page.snack_bar = ft.SnackBar(ft.Text(f"頭上マージンを{margin_value:.1f}%に更新しました。"))
+            page.snack_bar.open = True
+            page.update()
+        
+        head_margin_slider = ft.Slider(
+            min=0,
+            max=30,
+            value=get_HEAD_MARGIN(),
+            divisions=300,
+            on_change=on_head_margin_change,
+        )
+        
         def update_margin_setting(event):
             self.set_margin_setting_visible(False)
             self.set_barcode_field_visible(True)
@@ -670,6 +697,20 @@ class SideBar(ft.Container):
                 ),
                 ft.Container(
                     content=margin_right_slider,
+                    expand=True,
+                ),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
+            ft.Divider(height=1),
+            ft.Row([
+                ft.Text("頭上:", style=ft.TextStyle(font_family="Noto Sans CJK JP"), size=12),
+                ft.Container(
+                    content=head_margin_value_text,
+                    padding=ft.padding.only(right=10),
+                    alignment=ft.alignment.center_right,
+                    width=40,
+                ),
+                ft.Container(
+                    content=head_margin_slider,
                     expand=True,
                 ),
             ], alignment=ft.MainAxisAlignment.CENTER, spacing=5),
@@ -876,6 +917,8 @@ class SideBar(ft.Container):
         self.margin_bottom_value_text = margin_bottom_value_text
         self.margin_left_value_text = margin_left_value_text
         self.margin_right_value_text = margin_right_value_text
+        self.head_margin_slider = head_margin_slider
+        self.head_margin_value_text = head_margin_value_text
         self.aspect_ratio_row = aspect_ratio_row
         self.aspect_ratio_group = aspect_ratio_group
         self.processed_dir_picker = processed_dir_picker
@@ -916,23 +959,26 @@ class SideBar(ft.Container):
     def set_margin_setting_visible(self, visible: bool):
         self.margin_row.visible = visible
         if visible:
-            # 表示時に現在の値を反映（50%を超える場合は50%に制限）
             current_margin_top = min(50.0, get_MARGIN_TOP())
             current_margin_bottom = min(50.0, get_MARGIN_BOTTOM())
             current_margin_left = min(50.0, get_MARGIN_LEFT())
             current_margin_right = min(50.0, get_MARGIN_RIGHT())
+            current_head_margin = get_HEAD_MARGIN()
             self.margin_top_slider.value = current_margin_top
             self.margin_bottom_slider.value = current_margin_bottom
             self.margin_left_slider.value = current_margin_left
             self.margin_right_slider.value = current_margin_right
+            self.head_margin_slider.value = current_head_margin
             self.margin_top_value_text.value = f"{current_margin_top:.1f}%"
             self.margin_bottom_value_text.value = f"{current_margin_bottom:.1f}%"
             self.margin_left_value_text.value = f"{current_margin_left:.1f}%"
             self.margin_right_value_text.value = f"{current_margin_right:.1f}%"
+            self.head_margin_value_text.value = f"{current_head_margin:.1f}%"
             self.margin_top_value_text.update()
             self.margin_bottom_value_text.update()
             self.margin_left_value_text.update()
             self.margin_right_value_text.update()
+            self.head_margin_value_text.update()
         self.margin_row.update()
     
     def set_aspect_ratio_setting_visible(self, visible: bool):

@@ -100,6 +100,11 @@ def initialize_settings():
             settings["SHOT_COUNT_START_DATE"] = datetime.now().strftime("%Y-%m-%d")
             updated = True
         
+        # 頭上マージン設定がない場合はデフォルト値5.0%を追加
+        if "HEAD_MARGIN" not in settings:
+            settings["HEAD_MARGIN"] = 5.0
+            updated = True
+        
         # 縦横比設定がない場合はデフォルト値"4:3"を追加
         if "ASPECT_RATIO" not in settings:
             settings["ASPECT_RATIO"] = "4:3"
@@ -223,6 +228,21 @@ def set_MARGIN_RIGHT(value):
     """右マージンを設定（パーセント）"""
     settings = load_settings()
     settings["MARGIN_RIGHT"] = float(value)
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+def get_HEAD_MARGIN():
+    """頭上マージンを取得（crop_heightに対するパーセント）"""
+    settings = load_settings()
+    if "HEAD_MARGIN" not in settings:
+        initialize_settings()
+        settings = load_settings()
+    return settings.get("HEAD_MARGIN", 5.0)
+
+def set_HEAD_MARGIN(value):
+    """頭上マージンを設定（crop_heightに対するパーセント）"""
+    settings = load_settings()
+    settings["HEAD_MARGIN"] = float(value)
     with open(SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2)
 
